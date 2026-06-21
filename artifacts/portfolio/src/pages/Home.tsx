@@ -561,7 +561,7 @@ export default function Home() {
             <div className="flex justify-center gap-8 text-sm font-mono uppercase tracking-widest text-muted-foreground">
               <a href="https://linkedin.com/in/mehma-qudsia" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">LinkedIn</a>
               <span>•</span>
-              <a href="#" className="hover:text-primary transition-colors">Upwork Profile</a>
+              <a href="https://www.upwork.com/freelancers/~0180728eb8aec5fd5f" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Upwork Profile</a>
             </div>
           </FadeIn>
         </div>
