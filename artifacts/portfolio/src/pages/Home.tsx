@@ -1,6 +1,6 @@
-import React, { useEffect, useRef } from "react";
-import { motion, useScroll, useTransform, useInView } from "framer-motion";
-import { ArrowUpRight, ChevronRight, Terminal, Code2, Layers, Briefcase, Mail, MapPin, ExternalLink, Smartphone } from "lucide-react";
+import React, { useRef } from "react";
+import { motion, useInView } from "framer-motion";
+import { ArrowUpRight, ChevronRight, Terminal, Code2, Layers, Briefcase, Mail, MapPin, ExternalLink, Smartphone, Zap, Globe, Settings, Users, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -52,6 +52,50 @@ const skills = [
   { category: "Marketing", items: ["SEO", "Meta Ads", "Google Ads", "Email Automation"] },
 ];
 
+const services = [
+  {
+    icon: Layers,
+    title: "GHL Funnel Design",
+    tagline: "High-converting funnels that look like a million dollars",
+    desc: "From single opt-in pages to multi-step funnel systems — I design and build GHL funnels that convert. Every page is optimised for speed, mobile-first, and wired up with tracking.",
+    deliverables: ["Landing page + thank you page", "Lead capture & booking forms", "Meta Pixel + Google Ads tracking", "UTM parameter setup", "SEO-optimised copy structure", "Multi-language variants available"],
+    ideal: "Agencies, real estate brands, coaches, service businesses",
+    accent: "from-primary/20 to-primary/5",
+  },
+  {
+    icon: Settings,
+    title: "GHL Full CRM Setup",
+    tagline: "Your entire GHL sub-account built from scratch",
+    desc: "Full end-to-end GoHighLevel sub-account configuration — pipelines, custom fields, tags, snapshots, forms, automation triggers, calendars, and user roles. You hand me a blank sub-account, I hand back a ready-to-run system.",
+    deliverables: ["Pipeline architecture & stages", "Custom values & custom fields", "Tag structure & segmentation", "Snapshot creation & deployment", "Form & survey builds", "Workflow trigger setup", "Calendar & booking config"],
+    ideal: "GHL agencies needing a reliable embedded specialist",
+    accent: "from-green-900/30 to-green-950/10",
+  },
+  {
+    icon: Globe,
+    title: "WordPress & Shopify Builds",
+    desc: "Production-ready websites built to convert — not just to look good. Custom themes, WooCommerce stores, payment integrations, and full staging-to-production migrations.",
+    deliverables: ["Custom theme design (Elementor / Divi)", "WooCommerce + payment gateway setup", "Staging-to-production migration", "Performance optimisation", "SEO on-page setup", "Plugin configuration & security"],
+    ideal: "Businesses needing a professional web presence fast",
+    tagline: "Custom sites that actually rank and convert",
+    accent: "from-primary/10 to-transparent",
+  },
+  {
+    icon: Users,
+    title: "Agency Team Support",
+    tagline: "Embedded GHL specialist — just add to your team",
+    desc: "I slot into your agency's existing workflow as a dedicated GHL builder. White-label friendly. I work to your briefs, your timelines, and your client standards — no handholding needed.",
+    deliverables: ["GHL sub-account builds per client", "Funnel & landing page delivery", "Snapshot builds for your agency", "Forms, pipelines, tags, custom values", "Consistent turnaround times", "Direct communication — no delays"],
+    ideal: "GHL agencies with overflow work or needing a reliable contractor",
+    accent: "from-primary/15 to-primary/3",
+  },
+];
+
+const brands = [
+  "Emaar", "Meraas", "Aldar", "Sobha", "Nikki Beach Residences",
+  "Binghatti", "Dreamhive", "DesignBey", "Strivox", "H-Square",
+];
+
 // --- Components ---
 
 const FadeIn = ({ children, delay = 0, className = "" }: { children: React.ReactNode, delay?: number, className?: string }) => {
@@ -71,9 +115,6 @@ const FadeIn = ({ children, delay = 0, className = "" }: { children: React.React
 };
 
 export default function Home() {
-  const { scrollYProgress } = useScroll();
-  const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
-
   return (
     <div className="min-h-screen bg-background text-foreground overflow-hidden font-sans selection:bg-primary selection:text-primary-foreground">
       {/* Background Grid */}
@@ -134,11 +175,11 @@ export default function Home() {
             transition={{ duration: 0.8, delay: 0.5 }}
             className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto"
           >
-            <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 h-14 px-8 text-lg font-bold rounded-none box-glow" onClick={() => document.getElementById('work')?.scrollIntoView({ behavior: 'smooth' })}>
-              View My Work <ArrowUpRight className="ml-2 w-5 h-5" />
+            <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 h-14 px-8 text-lg font-bold rounded-none box-glow" onClick={() => document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' })}>
+              See Services <ArrowUpRight className="ml-2 w-5 h-5" />
             </Button>
-            <Button size="lg" variant="outline" className="h-14 px-8 text-lg font-bold rounded-none border-border hover:border-primary hover:text-primary transition-colors" onClick={() => window.location.href = "mailto:mehmaqudsia94@gmail.com"}>
-              Let's Talk <Mail className="ml-2 w-5 h-5" />
+            <Button size="lg" variant="outline" className="h-14 px-8 text-lg font-bold rounded-none border-border hover:border-primary hover:text-primary transition-colors" onClick={() => document.getElementById('work')?.scrollIntoView({ behavior: 'smooth' })}>
+              View My Work <ExternalLink className="ml-2 w-5 h-5" />
             </Button>
           </motion.div>
         </div>
@@ -160,6 +201,68 @@ export default function Home() {
               </FadeIn>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* --- SERVICES --- */}
+      <section id="services" className="relative z-10 py-24 px-6">
+        <div className="max-w-7xl mx-auto">
+          <FadeIn>
+            <div className="flex items-center gap-4 mb-4">
+              <Zap className="w-8 h-8 text-primary" />
+              <h2 className="text-3xl md:text-5xl font-bold tracking-tight uppercase">What I Build</h2>
+            </div>
+            <p className="text-muted-foreground text-lg mb-14 max-w-2xl">
+              Clear deliverables. No guesswork. Tell me what you need and I'll tell you exactly how I'll build it.
+            </p>
+          </FadeIn>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {services.map((svc, i) => {
+              const Icon = svc.icon;
+              return (
+                <FadeIn key={i} delay={i * 0.1}>
+                  <div className={`relative h-full flex flex-col bg-gradient-to-br ${svc.accent} border border-border p-8 box-glow-hover transition-all duration-300`}>
+                    <div className="flex items-start gap-4 mb-5">
+                      <div className="p-2.5 border border-primary/30 bg-primary/10 shrink-0">
+                        <Icon className="w-5 h-5 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold text-white">{svc.title}</h3>
+                        <p className="text-primary text-sm font-mono mt-0.5">{svc.tagline}</p>
+                      </div>
+                    </div>
+                    <p className="text-muted-foreground text-sm leading-relaxed mb-6">{svc.desc}</p>
+                    <ul className="space-y-2 mb-6 flex-grow">
+                      {svc.deliverables.map((d, j) => (
+                        <li key={j} className="flex items-start gap-2.5 text-sm text-foreground/80">
+                          <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                          {d}
+                        </li>
+                      ))}
+                    </ul>
+                    <div className="border-t border-border/50 pt-4 mt-auto">
+                      <p className="text-xs font-mono text-muted-foreground uppercase tracking-wider">
+                        <span className="text-primary">Ideal for:</span> {svc.ideal}
+                      </p>
+                    </div>
+                  </div>
+                </FadeIn>
+              );
+            })}
+          </div>
+
+          <FadeIn delay={0.4}>
+            <div className="mt-10 p-6 border border-primary/25 bg-primary/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+              <div>
+                <p className="text-white font-semibold text-lg">Not sure which service fits?</p>
+                <p className="text-muted-foreground text-sm mt-1">Send me a quick message — I'll tell you exactly what you need and how long it takes.</p>
+              </div>
+              <a href="mailto:mehmaqudsia94@gmail.com?subject=Project Enquiry" className="shrink-0 inline-flex items-center gap-2 bg-primary text-primary-foreground font-bold px-6 py-3 hover:bg-primary/90 transition-colors">
+                Get a Free Scope <ArrowUpRight className="w-4 h-4" />
+              </a>
+            </div>
+          </FadeIn>
         </div>
       </section>
 
@@ -326,6 +429,24 @@ export default function Home() {
               </FadeIn>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* --- BRANDS TRUST STRIP --- */}
+      <section className="relative z-10 py-16 px-6 border-y border-border bg-card/20">
+        <div className="max-w-7xl mx-auto">
+          <FadeIn>
+            <p className="text-center text-xs font-mono uppercase tracking-[0.3em] text-muted-foreground mb-10">
+              Brands & clients I've built for
+            </p>
+            <div className="flex flex-wrap justify-center items-center gap-x-10 gap-y-5">
+              {brands.map((brand, i) => (
+                <span key={i} className="text-sm font-semibold text-muted-foreground/60 hover:text-primary transition-colors duration-300 tracking-wide uppercase">
+                  {brand}
+                </span>
+              ))}
+            </div>
+          </FadeIn>
         </div>
       </section>
 
