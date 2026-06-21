@@ -31,11 +31,13 @@ const funnelProjects = [
 ];
 
 const aiApps = [
-  { name: "Tilal Binghatti App", desc: "Custom AI real estate app on Replit with dynamic listings", url: "tilal-binghatti-dream-hive-real-estate.replit.app" },
-  { name: "Mahir", desc: "Pakistan's First AI-Verified Service Network — Google AI Seekho 2026 Hackathon — deployed on Google Cloud Run with 9 Gemini AI agents — reduces time to find a worker from 45–90 min to under 60 seconds", url: "#" },
+  { name: "Dreamhive — GHL-Powered Real Estate", desc: "Full real estate website built on WordPress with lead generation running entirely through GoHighLevel — automated lead capture, CRM pipelines, and follow-up sequences. Every inquiry on the site flows into a live GHL automation.", url: "dreamhive.ae", tag: "WordPress + GHL" },
+  { name: "Tilal Binghatti App", desc: "Custom AI real estate app on Replit with dynamic property listings, intelligent filtering, and inquiry forms auto-populated from backend data.", url: "tilal-binghatti-dream-hive-real-estate.replit.app", tag: "AI App" },
+  { name: "Mahir — AI-Verified Service Network", desc: "Pakistan's First AI-Verified Service Network — Google AI Seekho 2026 Hackathon — deployed on Google Cloud Run with 9 Gemini AI agents — reduces time to find a verified worker from 45–90 min to under 60 seconds. Workers need no smartphone — AI calls them in Urdu.", url: "#", tag: "Hackathon" },
 ];
 
 const experience = [
+  { role: "GHL CRM Specialist & Funnel Builder", company: "Multiple Agency Teams", location: "Remote", period: "Jan 2026 – Present", desc: "Embedded GHL specialist working across multiple agency teams — delivering end-to-end CRM setup and funnel builds for client sub-accounts. Scope includes: GHL snapshots, funnel & landing page design, form builds, pipeline architecture, custom tags, custom values, automated workflows, and full sub-account configuration from scratch.", current: true },
   { role: "GHL & WordPress Funnel Designer", company: "Retrographic Digital", location: "Remote – Dubai", period: "Nov 2024 – Mar 2026", desc: "Designed and delivered 20+ GHL funnels for UAE luxury real estate clients including Emaar, Meraas, Aldar, Sobha, and Nikki Beach Residences. Built and maintained WordPress and Shopify client sites." },
   { role: "WordPress Developer & Team Lead", company: "DesignBey", location: "Remote – Sri Lanka", period: "Mar 2022 – 2025", desc: "Led team delivering 15+ WordPress projects for e-commerce, hospitality, and services clients." },
   { role: "WordPress Developer", company: "Digi Pro Ventures", location: "Remote – Pakistan", period: "Jul 2023 – Dec 2024", desc: "WordPress builds for real estate and e-commerce clients." },
@@ -240,11 +242,20 @@ export default function Home() {
               <FadeIn key={i} delay={i * 0.2}>
                 <div className="relative group bg-card border border-primary/30 p-8 md:p-12 overflow-hidden box-glow-hover">
                   <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
-                  <h3 className="text-2xl md:text-3xl font-bold text-white mb-4">{app.name}</h3>
+                  <div className="flex flex-wrap items-start gap-3 mb-4">
+                    <h3 className="text-2xl md:text-3xl font-bold text-white">{app.name}</h3>
+                    {app.tag && (
+                      <span className="mt-1 px-3 py-1 rounded-full border border-primary/40 bg-primary/10 text-primary text-xs font-mono uppercase tracking-wider">
+                        {app.tag}
+                      </span>
+                    )}
+                  </div>
                   <p className="text-lg text-muted-foreground leading-relaxed mb-6">{app.desc}</p>
-                  <a href={`https://${app.url}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center text-primary font-mono text-sm hover:underline">
-                    View Application <ArrowUpRight className="w-4 h-4 ml-2" />
-                  </a>
+                  {app.url !== "#" && (
+                    <a href={`https://${app.url}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center text-primary font-mono text-sm hover:underline">
+                      View Application <ArrowUpRight className="w-4 h-4 ml-2" />
+                    </a>
+                  )}
                 </div>
               </FadeIn>
             ))}
@@ -262,20 +273,29 @@ export default function Home() {
             </div>
           </FadeIn>
           
-          <div className="space-y-12">
+          <div className="space-y-12 relative">
+            <div className="hidden md:block absolute left-[-29px] top-0 bottom-0 w-px bg-border" />
             {experience.map((exp, i) => (
               <FadeIn key={i} delay={i * 0.1}>
-                <div className="relative pl-8 md:pl-0 border-l border-border md:border-none">
-                  <div className="hidden md:block absolute left-[-41px] top-2 w-3 h-3 bg-primary rounded-full shadow-[0_0_10px_rgba(171,255,0,0.8)]" />
-                  <div className="md:flex justify-between items-baseline mb-2">
-                    <h3 className="text-xl font-bold text-white">{exp.role}</h3>
-                    <span className="text-primary font-mono text-sm mt-1 md:mt-0 block">{exp.period}</span>
+                <div className={`relative pl-8 md:pl-0 border-l border-border md:border-none ${exp.current ? 'md:bg-primary/[0.03] md:-mx-6 md:px-6 md:py-6 md:border md:border-primary/20' : ''}`}>
+                  <div className={`hidden md:block absolute left-[-41px] top-3 w-3 h-3 rounded-full ${exp.current ? 'bg-primary shadow-[0_0_14px_rgba(171,255,0,1)] animate-pulse' : 'bg-muted border-2 border-border'}`} />
+                  <div className="md:flex justify-between items-start gap-4 mb-2">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <h3 className="text-xl font-bold text-white">{exp.role}</h3>
+                      {exp.current && (
+                        <span className="px-2.5 py-0.5 rounded-full bg-primary text-primary-foreground text-xs font-bold uppercase tracking-wider">
+                          Current
+                        </span>
+                      )}
+                    </div>
+                    <span className={`font-mono text-sm mt-1 md:mt-0 shrink-0 block ${exp.current ? 'text-primary' : 'text-muted-foreground'}`}>{exp.period}</span>
                   </div>
-                  <div className="flex items-center text-muted-foreground mb-4 text-sm font-mono uppercase tracking-wider">
-                    <span className="text-white font-semibold mr-3">{exp.company}</span>
-                    <MapPin className="w-3 h-3 mr-1" /> {exp.location}
+                  <div className="flex items-center text-muted-foreground mb-4 text-sm font-mono uppercase tracking-wider gap-2">
+                    <span className="text-white font-semibold">{exp.company}</span>
+                    <span className="text-border">·</span>
+                    <MapPin className="w-3 h-3" /> {exp.location}
                   </div>
-                  <p className="text-muted-foreground">{exp.desc}</p>
+                  <p className="text-muted-foreground leading-relaxed">{exp.desc}</p>
                 </div>
               </FadeIn>
             ))}
