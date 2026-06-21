@@ -1,0 +1,31 @@
+uploads = []
+
+[[generated]]
+id = "4SnxqkGG5dnzPRFu1ofjr"
+uri = "file://attached_assets/generated_images/linkedin_banner.png"
+type = "image"
+title = "linkedin banner dark green tech"
+
+[[generated]]
+id = "Ir6tm6_jAQ5iRpd0YJQy9"
+uri = "file://artifacts/portfolio/public/images/project-real-estate.png"
+type = "image"
+title = "Luxury real estate web dev"
+
+[[generated]]
+id = "SKFTZzAYj4S9Ml0GPe0Sj"
+uri = "file://artifacts/portfolio/public/images/project-ecommerce.png"
+type = "image"
+title = "E-commerce web dev"
+
+[[generated]]
+id = "NSKGVO2YQwTCQrwNrAUm9"
+uri = "file://artifacts/portfolio/public/images/project-funnel.png"
+type = "image"
+title = "Luxury resort funnel"
+
+[[outputs]]
+id = "YPskK_cpCT5Cf3EUInBDI"
+uri = "file://attached_assets/generated_images/linkedin_banner.png"
+type = "image"
+title = "LinkedIn Banner — Dark Neon Green Theme"
