@@ -144,9 +144,94 @@ const FadeIn = ({ children, delay = 0, className = "" }: { children: React.React
   );
 };
 
+const navLinks = [
+  { label: "Services", href: "#services" },
+  { label: "Work", href: "#work" },
+  { label: "Funnels", href: "#funnels" },
+  { label: "AI Builds", href: "#ai" },
+  { label: "Experience", href: "#experience" },
+  { label: "Contact", href: "#contact" },
+];
+
+function StickyNav() {
+  const [scrolled, setScrolled] = React.useState(false);
+  const [active, setActive] = React.useState("");
+  const [menuOpen, setMenuOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    const onScroll = () => {
+      setScrolled(window.scrollY > 40);
+      const sections = navLinks.map(l => l.href.slice(1));
+      for (let i = sections.length - 1; i >= 0; i--) {
+        const el = document.getElementById(sections[i]);
+        if (el && window.scrollY >= el.offsetTop - 120) {
+          setActive(sections[i]);
+          break;
+        }
+      }
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  const scrollTo = (href: string) => {
+    const id = href.slice(1);
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+    setMenuOpen(false);
+  };
+
+  return (
+    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "bg-background/95 backdrop-blur-md border-b border-border" : "bg-transparent"}`}>
+      <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
+        <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="font-mono text-sm font-bold text-primary tracking-wider uppercase">
+          MQ
+        </button>
+
+        {/* Desktop nav */}
+        <nav className="hidden md:flex items-center gap-1">
+          {navLinks.map(link => (
+            <button
+              key={link.href}
+              onClick={() => scrollTo(link.href)}
+              className={`px-4 py-1.5 text-xs font-mono uppercase tracking-widest transition-colors ${active === link.href.slice(1) ? "text-primary" : "text-muted-foreground hover:text-white"}`}
+            >
+              {link.label}
+            </button>
+          ))}
+          <a href="https://wa.me/923135279257" target="_blank" rel="noopener noreferrer" className="ml-4 px-4 py-1.5 bg-primary text-primary-foreground text-xs font-bold font-mono uppercase tracking-widest hover:bg-primary/90 transition-colors">
+            Hire Me
+          </a>
+        </nav>
+
+        {/* Mobile hamburger */}
+        <button className="md:hidden text-muted-foreground hover:text-white p-1" onClick={() => setMenuOpen(v => !v)}>
+          <div className={`w-5 h-0.5 bg-current transition-all mb-1 ${menuOpen ? "rotate-45 translate-y-1.5" : ""}`} />
+          <div className={`w-5 h-0.5 bg-current transition-all mb-1 ${menuOpen ? "opacity-0" : ""}`} />
+          <div className={`w-5 h-0.5 bg-current transition-all ${menuOpen ? "-rotate-45 -translate-y-1.5" : ""}`} />
+        </button>
+      </div>
+
+      {/* Mobile menu */}
+      {menuOpen && (
+        <div className="md:hidden bg-background/98 backdrop-blur-md border-b border-border px-6 py-4 flex flex-col gap-2">
+          {navLinks.map(link => (
+            <button key={link.href} onClick={() => scrollTo(link.href)} className="text-left py-2 text-sm font-mono uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors border-b border-border/30 last:border-0">
+              {link.label}
+            </button>
+          ))}
+          <a href="https://wa.me/923135279257" target="_blank" rel="noopener noreferrer" className="mt-2 py-3 bg-primary text-primary-foreground text-center text-sm font-bold font-mono uppercase tracking-widest">
+            Hire Me on WhatsApp
+          </a>
+        </div>
+      )}
+    </header>
+  );
+}
+
 export default function Home() {
   return (
     <div className="min-h-screen bg-background text-foreground overflow-hidden font-sans selection:bg-primary selection:text-primary-foreground">
+      <StickyNav />
       {/* Background Grid */}
       <div className="fixed inset-0 z-0 pointer-events-none opacity-[0.03]" style={{ backgroundImage: "linear-gradient(hsla(var(--primary)) 1px, transparent 1px), linear-gradient(90deg, hsla(var(--primary)) 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
       
@@ -330,7 +415,7 @@ export default function Home() {
       </section>
 
       {/* --- PROJECTS: GHL FUNNELS --- */}
-      <section className="relative z-10 py-24 px-6 bg-card/30 border-y border-border">
+      <section id="funnels" className="relative z-10 py-24 px-6 bg-card/30 border-y border-border">
         <div className="max-w-7xl mx-auto">
           <FadeIn>
             <div className="flex items-center gap-4 mb-3">
@@ -387,7 +472,7 @@ export default function Home() {
       </section>
 
       {/* --- AI APPS --- */}
-      <section className="relative z-10 py-24 px-6 overflow-hidden">
+      <section id="ai" className="relative z-10 py-24 px-6 overflow-hidden">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
         <div className="max-w-5xl mx-auto relative z-10">
           <FadeIn>
@@ -424,7 +509,7 @@ export default function Home() {
       </section>
 
       {/* --- EXPERIENCE --- */}
-      <section className="relative z-10 py-24 px-6 bg-card/30 border-y border-border">
+      <section id="experience" className="relative z-10 py-24 px-6 bg-card/30 border-y border-border">
         <div className="max-w-4xl mx-auto">
           <FadeIn>
             <div className="flex items-center gap-4 mb-12">
@@ -536,7 +621,7 @@ export default function Home() {
       </section>
 
       {/* --- CONTACT --- */}
-      <section className="relative z-10 py-32 px-6 border-t border-border bg-black">
+      <section id="contact" className="relative z-10 py-32 px-6 border-t border-border bg-black">
         <div className="max-w-4xl mx-auto text-center">
           <FadeIn>
             <h2 className="text-5xl md:text-7xl font-bold tracking-tighter mb-8 text-glow text-white">READY TO BUILD?</h2>
