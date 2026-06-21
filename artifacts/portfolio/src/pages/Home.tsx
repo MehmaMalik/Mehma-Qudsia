@@ -32,7 +32,9 @@ const funnelProjects = [
   { name: "Masaar 3 Villas", desc: "Funnel", url: "masaar3-villas.com/masaar-page", preview: true },
   { name: "Dubai's 1st Mega Property Show", desc: "International expo funnel — Manila", url: "manila.dandkproperties.ae/dubais-1st-mega-property-expo", preview: true },
   { name: "Malaysia Premier Property Expo", desc: "Funnel — Kuala Lumpur", url: "kualalumpur.dandkproperties.ae/kuala-lumpur-property-expo", preview: true },
-  { name: "SaaS + ManyChat Automation", desc: "Instagram DM automation funnels", url: "hsquareautomation.com/manychat-page", preview: true },
+  { name: "ManyChat Automation — H Square", desc: "Instagram DM automation funnel", url: "hsquareautomation.com/manychat-page", preview: true },
+  { name: "Get My System — H Square", desc: "SaaS lead capture page", url: "hsquareautomation.com/get-my-system-page", preview: true },
+  { name: "DM Automation — H Square", desc: "Instagram DM funnel page", url: "hsquareautomation.com/dm-automation-page", preview: true },
   { name: "Visa Funnel", desc: "Funnel & SEO", url: "app.acclrt.io/v2/preview/Pc8hjz5sFcPQ0URkfqZU?notrack=true", preview: false },
   { name: "MBR City District One — Phase 2", desc: "Funnel & SEO (in progress)", url: "app.acclrt.io/v2/preview/qL4rPoZio7BUxu5zRDHL", preview: false },
   { name: "Palm Jebel Ali", desc: "Funnel", url: "app.acclrt.io/v2/preview/E58634TiBBrmcgmv5Uy4", preview: false },
@@ -46,7 +48,8 @@ const funnelProjects = [
   { name: "Jumeirah Golf Estates", desc: "Funnel", url: "app.acclrt.io/v2/preview/eog0Q6Da0Cz82TiUbajc", preview: false },
   { name: "BetterWAY Consultation", desc: "Funnel", url: "app.acclrt.io/v2/preview/O0WqeEcNHqyVMvoi9nRy", preview: false },
   { name: "Strategic Call", desc: "Funnel", url: "app.acclrt.io/v2/preview/nteTLJsoTAte5SBDIgHT", preview: false },
-  { name: "Graphic Designer — H Square", desc: "Funnel", url: "crm.hsquareautomation.com/v2/preview/UeTUV7JIBdzkGYbQaKaJk?notrack=true", preview: false },
+  { name: "Graphic Designer — H Square", desc: "Funnel", url: "crm.hsquareautomation.com/v2/preview/UeTUV7JIBdzGYbQaKaJk?notrack=true", preview: false },
+  { name: "SaaS Funnel — H Square", desc: "Funnel", url: "crm.hsquareautomation.com/v2/preview/bXUV9f07v5EJbvCXdloR", preview: false },
 ];
 
 const aiApps = [
@@ -61,6 +64,14 @@ const experience = [
   { role: "WordPress Developer & Team Leader", company: "DesignBey", location: "Remote – Sri Lanka", period: "Mar 2022 – 2025", desc: "Led a team delivering 15+ WordPress projects across e-commerce, hospitality, and service sectors. Managed client communication, timelines, and plugin/theme builds." },
   { role: "WordPress Developer", company: "Digi Pro Ventures", location: "Remote – Pakistan", period: "Jul 2023 – Dec 2024", desc: "WordPress builds for real estate and e-commerce clients. Theme installation, WooCommerce setup, payment gateway integrations." },
   { role: "Freelance Developer", company: "Upwork", location: "Remote", period: "2020 – Present", desc: "40+ client projects including e-commerce stores, branding websites, email automation setups, and custom WordPress solutions." },
+];
+
+const certifications = [
+  { title: "SEO Course", issuer: "Ghulam Ali DMD", year: "2025", type: "SEO" },
+  { title: "Search Engine Optimization", issuer: "PROtechSoft", year: "2024", type: "SEO" },
+  { title: "Online Social Media Marketing", issuer: "PITB", year: "2023", type: "Marketing" },
+  { title: "#SheMeansBusiness Training Partner", issuer: "Facebook × Femprow", year: "2021", type: "Business" },
+  { title: "#SheMeansBusiness Training Partner", issuer: "Facebook × USAID", year: "2021", type: "Business" },
 ];
 
 const skills = [
@@ -470,6 +481,34 @@ export default function Home() {
                         {skill}
                       </span>
                     ))}
+                  </div>
+                </div>
+              </FadeIn>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* --- CERTIFICATIONS --- */}
+      <section className="relative z-10 py-20 px-6">
+        <div className="max-w-7xl mx-auto">
+          <FadeIn>
+            <div className="flex items-center gap-4 mb-10">
+              <CheckCircle2 className="w-7 h-7 text-primary" />
+              <h2 className="text-3xl md:text-4xl font-bold tracking-tight uppercase">Certifications</h2>
+            </div>
+          </FadeIn>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {certifications.map((cert, i) => (
+              <FadeIn key={i} delay={i * 0.08}>
+                <div className="flex items-start gap-4 bg-card border border-border p-5 hover:border-primary/40 transition-colors">
+                  <div className="mt-0.5 shrink-0 w-8 h-8 flex items-center justify-center border border-primary/30 bg-primary/10">
+                    <span className="text-primary text-xs font-bold font-mono">{cert.year.slice(2)}</span>
+                  </div>
+                  <div>
+                    <p className="text-white font-semibold text-sm leading-snug">{cert.title}</p>
+                    <p className="text-primary/80 text-xs font-mono mt-1">{cert.issuer}</p>
+                    <p className="text-muted-foreground/60 text-xs mt-0.5">{cert.year}</p>
                   </div>
                 </div>
               </FadeIn>
