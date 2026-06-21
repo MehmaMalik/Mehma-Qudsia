@@ -46,11 +46,12 @@ const funnelProjects = [
   { name: "Jumeirah Golf Estates", desc: "Funnel", url: "app.acclrt.io/v2/preview/eog0Q6Da0Cz82TiUbajc", preview: false },
   { name: "BetterWAY Consultation", desc: "Funnel", url: "app.acclrt.io/v2/preview/O0WqeEcNHqyVMvoi9nRy", preview: false },
   { name: "Strategic Call", desc: "Funnel", url: "app.acclrt.io/v2/preview/nteTLJsoTAte5SBDIgHT", preview: false },
+  { name: "Graphic Designer — H Square", desc: "Funnel", url: "crm.hsquareautomation.com/v2/preview/UeTUV7JIBdzkGYbQaKaJk?notrack=true", preview: false },
 ];
 
 const aiApps = [
+  { name: "Dreamhive — AI Real Estate Website", desc: "Dubai luxury real estate website built with AI — intelligent property search, dynamic listings, and automated lead capture flowing directly into GHL CRM pipelines and follow-up sequences.", url: "dreamhive.ae", tag: "AI Website" },
   { name: "Tilal Binghatti — AI Real Estate App", desc: "Custom AI-powered real estate app built on Replit for Dubai's Binghatti development — dynamic property listings, intelligent filtering, and inquiry forms linked to GHL CRM automation.", url: "tilal-binghatti-dream-hive-real-estate.replit.app", tag: "GHL + AI App" },
-  { name: "Graphic Designer Funnel (H Square)", desc: "Full funnel build for a creative services business — built inside H Square Automations GHL account with lead capture, pipeline, and follow-up automation.", url: "crm.hsquareautomation.com/v2/preview/UeTUV7JIBdzkGYbQaKaJk?notrack=true", tag: "GHL Funnel" },
   { name: "Mahir — AI-Verified Service Network", desc: "Pakistan's First AI-Verified Service Network — Google AI Seekho 2026 Hackathon — 9 Gemini AI agents deployed on Google Cloud Run. Finds a verified worker in under 60 seconds. Workers need no smartphone — AI calls them in Urdu.", url: "#", tag: "Hackathon" },
 ];
 
