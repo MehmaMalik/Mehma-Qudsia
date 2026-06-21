@@ -6,42 +6,60 @@ import { Badge } from "@/components/ui/badge";
 
 // --- Data ---
 const webDevProjects = [
-  { name: "Dreamhive", desc: "Dubai real estate WordPress site", url: "dreamhive.ae", type: "real-estate" },
+  { name: "Dreamhive", desc: "Dubai luxury real estate web app — complete build", url: "dreamhive.ae", type: "real-estate" },
   { name: "The Travel Ceylon", desc: "Tour booking platform with custom dashboard", url: "thetravelceylon.com", type: "travel" },
-  { name: "Coaching Alley", desc: "WordPress + ConvertKit email automation", url: "coachingalley.com", type: "other" },
-  { name: "Travelkit", desc: "Custom payment logic, different prices per payment method", url: "travelkit.lk", type: "travel" },
-  { name: "Glow Body & Beauty", desc: "Staging-to-production migration", url: "glowbnb.com", type: "e-commerce" },
-  { name: "Allura Estrella", desc: "Full Shopify build with installment payments", url: "alluraestrella.com", type: "e-commerce" },
-  { name: "GloriousGifts.pk", desc: "Shopify + pixel integration", url: "gloriousgifts.pk", type: "e-commerce" },
-  { name: "Better Way Real Estate", desc: "WordPress real estate site (UAE)", url: "better-way.ae", type: "real-estate" },
-  { name: "Fiable Luxury", desc: "Luxury brand WordPress site", url: "fiableluxury.com", type: "e-commerce" },
+  { name: "Better Way Real Estate", desc: "Custom WordPress real estate site (UAE)", url: "better-way.ae", type: "real-estate" },
+  { name: "Coaching Alley", desc: "WordPress + ConvertKit email automation system", url: "coachingalley.com", type: "other" },
+  { name: "Travelkit", desc: "Custom payment logic — different prices per payment method", url: "travelkit.lk", type: "travel" },
+  { name: "Glow Body & Beauty", desc: "Staging-to-production full site migration", url: "glowbnb.com", type: "e-commerce" },
+  { name: "Allura Estrella", desc: "Shopify — full build with installment payments", url: "alluraestrella.com", type: "e-commerce" },
+  { name: "GloriousGifts.pk", desc: "Shopify — pixel integration, custom fields, maintenance", url: "gloriousgifts.pk", type: "e-commerce" },
+  { name: "Fiable Luxury", desc: "Custom luxury brand WordPress site", url: "fiableluxury.com", type: "e-commerce" },
+  { name: "Mstore", desc: "WooCommerce — product upload, payment + installment plugin", url: "mstoreonline.lk", type: "e-commerce" },
+  { name: "Strivox Cleaning", desc: "Complete WordPress website (Australia)", url: "strivoxcleaning.com.au", type: "other" },
+  { name: "Samley Teas", desc: "Complete WordPress e-commerce site", url: "samleyteas.lk", type: "e-commerce" },
 ];
 
 const funnelProjects = [
-  { name: "The Oasis by Emaar", desc: "Funnel & SEO", url: "theoasis-emaar.com" },
-  { name: "Grand Polo Club & Resort", desc: "Emaar luxury resort funnel", url: "grandpoloemaar.com" },
-  { name: "MBR City District One", desc: "Dubai mega development funnel", url: "phaseone-district1west.com" },
-  { name: "Nikki Beach Residences", desc: "Al Marjan Island luxury funnel", url: "almarjan-nikkibeach.com" },
-  { name: "Tilal Binghatti", desc: "AI-powered custom app funnel (Replit)", url: "tilal.eliteestatesuae.com" },
-  { name: "Sobha Beachfront", desc: "Luxury beachfront funnel", url: "sobha-beachfront.com" },
-  { name: "Aldar Fahid Island", desc: "Aldar beachfront funnel", url: "aldar-fahidisland.com" },
-  { name: "The Heights by Emaar", desc: "Country Club & Wellness funnel", url: "emaar-theheights.com" },
-  { name: "Dubai Mega Property Show", desc: "International expo funnel (Manila)", url: "manila.dandkproperties.ae" },
-  { name: "SaaS + ManyChat Funnels", desc: "Instagram DM automation", url: "hsquareautomation.com" },
+  { name: "The Oasis by Emaar", desc: "Funnel & SEO", url: "theoasis-emaar.com", preview: true },
+  { name: "Grand Polo Club & Resort", desc: "Funnel & SEO — Emaar luxury resort", url: "grandpoloemaar.com", preview: true },
+  { name: "MBR City District One — Phase 1", desc: "Funnel & SEO", url: "phaseone-district1west.com", preview: true },
+  { name: "Nikki Beach Residences", desc: "Funnel & SEO — Al Marjan Island", url: "almarjan-nikkibeach.com/nikki-beach-1795", preview: true },
+  { name: "The Heights Country Club by Emaar", desc: "Funnel & SEO", url: "emaar-theheights.com", preview: true },
+  { name: "Aldar Fahid Island", desc: "Funnel & SEO", url: "aldar-fahidisland.com", preview: true },
+  { name: "Atelis at D3 by Meraas", desc: "Funnel & SEO", url: "meraas-d3.com/atelis-d3-at-meeras-page", preview: true },
+  { name: "Sobha Beachfront", desc: "Funnel & SEO — luxury beachfront residences", url: "sobha-beachfront.com/sobhas-beachfront-luxury-residences", preview: true },
+  { name: "Masaar 3 Villas", desc: "Funnel", url: "masaar3-villas.com/masaar-page", preview: true },
+  { name: "Dubai's 1st Mega Property Show", desc: "International expo funnel — Manila", url: "manila.dandkproperties.ae/dubais-1st-mega-property-expo", preview: true },
+  { name: "Malaysia Premier Property Expo", desc: "Funnel — Kuala Lumpur", url: "kualalumpur.dandkproperties.ae/kuala-lumpur-property-expo", preview: true },
+  { name: "SaaS + ManyChat Automation", desc: "Instagram DM automation funnels", url: "hsquareautomation.com/manychat-page", preview: true },
+  { name: "Visa Funnel", desc: "Funnel & SEO", url: "app.acclrt.io/v2/preview/Pc8hjz5sFcPQ0URkfqZU?notrack=true", preview: false },
+  { name: "MBR City District One — Phase 2", desc: "Funnel & SEO (in progress)", url: "app.acclrt.io/v2/preview/qL4rPoZio7BUxu5zRDHL", preview: false },
+  { name: "Palm Jebel Ali", desc: "Funnel", url: "app.acclrt.io/v2/preview/E58634TiBBrmcgmv5Uy4", preview: false },
+  { name: "Nad Al Sheba", desc: "Funnel", url: "app.acclrt.io/v2/preview/xnfZawWdNqI4Rw7RGZbV", preview: false },
+  { name: "Huydariyat Island", desc: "Funnel", url: "app.acclrt.io/v2/preview/Xj6J4aE6ZLmkKCDF8PsO", preview: false },
+  { name: "Huydariyat Island V2", desc: "Funnel", url: "app.acclrt.io/v2/preview/ykq5LKHTGmah8rmaZEhK", preview: false },
+  { name: "Bayn By Ora", desc: "Funnel", url: "app.acclrt.io/v2/preview/06zneUnzhjzFQbL9LBeK", preview: false },
+  { name: "Asora Bay", desc: "Funnel", url: "app.acclrt.io/v2/preview/8NRMDw8qo0NQ39OFButZ", preview: false },
+  { name: "Dubai Harbour Residences", desc: "Funnel", url: "app.acclrt.io/v2/preview/SGl1NGSGQwNoMcXXfgbU", preview: false },
+  { name: "Jumeirah Residences", desc: "Funnel", url: "app.acclrt.io/v2/preview/c0J1OVxZBkM5BMHDWT1q", preview: false },
+  { name: "Jumeirah Golf Estates", desc: "Funnel", url: "app.acclrt.io/v2/preview/eog0Q6Da0Cz82TiUbajc", preview: false },
+  { name: "BetterWAY Consultation", desc: "Funnel", url: "app.acclrt.io/v2/preview/O0WqeEcNHqyVMvoi9nRy", preview: false },
+  { name: "Strategic Call", desc: "Funnel", url: "app.acclrt.io/v2/preview/nteTLJsoTAte5SBDIgHT", preview: false },
 ];
 
 const aiApps = [
-  { name: "Dreamhive — GHL-Powered Real Estate", desc: "Full real estate website built on WordPress with lead generation running entirely through GoHighLevel — automated lead capture, CRM pipelines, and follow-up sequences. Every inquiry on the site flows into a live GHL automation.", url: "dreamhive.ae", tag: "WordPress + GHL" },
-  { name: "Tilal Binghatti App", desc: "Custom AI real estate app on Replit with dynamic property listings, intelligent filtering, and inquiry forms auto-populated from backend data.", url: "tilal-binghatti-dream-hive-real-estate.replit.app", tag: "AI App" },
-  { name: "Mahir — AI-Verified Service Network", desc: "Pakistan's First AI-Verified Service Network — Google AI Seekho 2026 Hackathon — deployed on Google Cloud Run with 9 Gemini AI agents — reduces time to find a verified worker from 45–90 min to under 60 seconds. Workers need no smartphone — AI calls them in Urdu.", url: "#", tag: "Hackathon" },
+  { name: "Tilal Binghatti — AI Real Estate App", desc: "Custom AI-powered real estate app built on Replit for Dubai's Binghatti development — dynamic property listings, intelligent filtering, and inquiry forms linked to GHL CRM automation.", url: "tilal-binghatti-dream-hive-real-estate.replit.app", tag: "GHL + AI App" },
+  { name: "Graphic Designer Funnel (H Square)", desc: "Full funnel build for a creative services business — built inside H Square Automations GHL account with lead capture, pipeline, and follow-up automation.", url: "crm.hsquareautomation.com/v2/preview/UeTUV7JIBdzkGYbQaKaJk?notrack=true", tag: "GHL Funnel" },
+  { name: "Mahir — AI-Verified Service Network", desc: "Pakistan's First AI-Verified Service Network — Google AI Seekho 2026 Hackathon — 9 Gemini AI agents deployed on Google Cloud Run. Finds a verified worker in under 60 seconds. Workers need no smartphone — AI calls them in Urdu.", url: "#", tag: "Hackathon" },
 ];
 
 const experience = [
-  { role: "GHL CRM Specialist & Funnel Builder", company: "Multiple Agency Teams", location: "Remote", period: "Jan 2026 – Present", desc: "Embedded GHL specialist working across multiple agency teams — delivering end-to-end CRM setup and funnel builds for client sub-accounts. Scope includes: GHL snapshots, funnel & landing page design, form builds, pipeline architecture, custom tags, custom values, automated workflows, and full sub-account configuration from scratch.", current: true },
-  { role: "GHL & WordPress Funnel Designer", company: "Retrographic Digital", location: "Remote – Dubai", period: "Nov 2024 – Mar 2026", desc: "Designed and delivered 20+ GHL funnels for UAE luxury real estate clients including Emaar, Meraas, Aldar, Sobha, and Nikki Beach Residences. Built and maintained WordPress and Shopify client sites." },
-  { role: "WordPress Developer & Team Lead", company: "DesignBey", location: "Remote – Sri Lanka", period: "Mar 2022 – 2025", desc: "Led team delivering 15+ WordPress projects for e-commerce, hospitality, and services clients." },
-  { role: "WordPress Developer", company: "Digi Pro Ventures", location: "Remote – Pakistan", period: "Jul 2023 – Dec 2024", desc: "WordPress builds for real estate and e-commerce clients." },
-  { role: "Freelance Developer", company: "Upwork", location: "Remote", period: "2020 – Present", desc: "40+ client projects including e-commerce stores, branding websites, and email automation setups." },
+  { role: "GHL CRM Specialist & Funnel Builder", company: "H Square Automations", location: "Remote", period: "Jan 2026 – Present", desc: "End-to-end GHL sub-account setup and funnel builds for agency clients — snapshots, funnel design, form builds, pipeline architecture, custom tags, custom values, automated workflows, calendar configuration, and full sub-account setup from scratch.", current: true },
+  { role: "GHL, WordPress & Shopify Developer", company: "Retrographic Digital", location: "Remote – Dubai", period: "Nov 2024 – Mar 2026", desc: "Designed and delivered 20+ GHL funnels for UAE luxury real estate brands including Emaar, Meraas, Aldar, Sobha, and Nikki Beach Residences. Coordinated client deliveries and maintained WordPress and Shopify sites." },
+  { role: "WordPress Developer & Team Leader", company: "DesignBey", location: "Remote – Sri Lanka", period: "Mar 2022 – 2025", desc: "Led a team delivering 15+ WordPress projects across e-commerce, hospitality, and service sectors. Managed client communication, timelines, and plugin/theme builds." },
+  { role: "WordPress Developer", company: "Digi Pro Ventures", location: "Remote – Pakistan", period: "Jul 2023 – Dec 2024", desc: "WordPress builds for real estate and e-commerce clients. Theme installation, WooCommerce setup, payment gateway integrations." },
+  { role: "Freelance Developer", company: "Upwork", location: "Remote", period: "2020 – Present", desc: "40+ client projects including e-commerce stores, branding websites, email automation setups, and custom WordPress solutions." },
 ];
 
 const skills = [
@@ -303,24 +321,51 @@ export default function Home() {
       <section className="relative z-10 py-24 px-6 bg-card/30 border-y border-border">
         <div className="max-w-7xl mx-auto">
           <FadeIn>
-            <div className="flex items-center gap-4 mb-12">
+            <div className="flex items-center gap-4 mb-3">
               <Layers className="w-8 h-8 text-primary" />
               <h2 className="text-3xl md:text-5xl font-bold tracking-tight uppercase">GHL Funnels</h2>
             </div>
+            <p className="text-muted-foreground mb-12 font-mono text-sm">
+              {funnelProjects.length}+ funnels built · UAE real estate, SaaS, coaching, property expos
+            </p>
           </FadeIn>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {funnelProjects.map((proj, i) => (
-              <FadeIn key={i} delay={i * 0.05}>
+
+          {/* Live-domain funnels */}
+          <FadeIn delay={0.05}>
+            <p className="text-xs font-mono uppercase tracking-[0.25em] text-primary mb-4">Live domains</p>
+          </FadeIn>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-10">
+            {funnelProjects.filter(p => p.preview).map((proj, i) => (
+              <FadeIn key={i} delay={i * 0.04}>
                 <a href={`https://${proj.url}`} target="_blank" rel="noopener noreferrer" className="block">
-                  <div className="group flex flex-col sm:flex-row sm:items-center justify-between bg-card border border-border p-6 transition-all duration-300 hover:border-primary hover:bg-card/80">
+                  <div className="group flex flex-col sm:flex-row sm:items-center justify-between bg-card border border-border p-5 transition-all duration-300 hover:border-primary hover:bg-primary/5">
                     <div>
-                      <h3 className="text-lg font-bold text-white mb-1 group-hover:text-primary transition-colors">{proj.name}</h3>
-                      <p className="text-muted-foreground text-sm">{proj.desc}</p>
+                      <h3 className="text-base font-bold text-white mb-0.5 group-hover:text-primary transition-colors">{proj.name}</h3>
+                      <p className="text-muted-foreground text-xs">{proj.desc}</p>
                     </div>
-                    <div className="mt-4 sm:mt-0 flex items-center text-xs font-mono text-muted-foreground group-hover:text-white transition-colors">
-                      {proj.url} <ChevronRight className="w-4 h-4 ml-1 text-primary" />
+                    <div className="mt-3 sm:mt-0 shrink-0 flex items-center text-xs font-mono text-primary/70 group-hover:text-primary transition-colors gap-1">
+                      View <ExternalLink className="w-3 h-3" />
                     </div>
+                  </div>
+                </a>
+              </FadeIn>
+            ))}
+          </div>
+
+          {/* Preview-only funnels */}
+          <FadeIn delay={0.05}>
+            <p className="text-xs font-mono uppercase tracking-[0.25em] text-muted-foreground mb-4">Preview links</p>
+          </FadeIn>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+            {funnelProjects.filter(p => !p.preview).map((proj, i) => (
+              <FadeIn key={i} delay={i * 0.03}>
+                <a href={`https://${proj.url}`} target="_blank" rel="noopener noreferrer" className="block">
+                  <div className="group flex items-center justify-between bg-background/40 border border-border/50 px-4 py-3 transition-all hover:border-primary/40 hover:bg-primary/5">
+                    <div>
+                      <p className="text-sm font-semibold text-white/80 group-hover:text-white transition-colors">{proj.name}</p>
+                      <p className="text-xs text-muted-foreground/60">{proj.desc}</p>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-primary/40 group-hover:text-primary shrink-0 ml-2 transition-colors" />
                   </div>
                 </a>
               </FadeIn>
