@@ -1,8 +1,98 @@
-import React, { useRef } from "react";
-import { motion, useInView } from "framer-motion";
-import { ArrowUpRight, ChevronRight, Terminal, Code2, Layers, Briefcase, Mail, MapPin, ExternalLink, Smartphone, Zap, Globe, Settings, Users, CheckCircle2 } from "lucide-react";
+import React, { useRef, useState, useEffect, useCallback } from "react";
+import { motion, useInView, AnimatePresence } from "framer-motion";
+import { ArrowUpRight, ChevronRight, Terminal, Code2, Layers, Briefcase, Mail, MapPin, ExternalLink, Smartphone, Zap, Globe, Settings, Users, CheckCircle2, X, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+
+import imgMeriva from "@assets/Meriva-Sunset-Beachfront-Residences-by-Ellington-Properties-Du_1782109552903.png";
+import imgSolar from "@assets/Solar_Panel_Landing_Page_1782109606531.png";
+import imgRedfox from "@assets/Redfox_Publisher_1782109678739.png";
+import imgEmaarVenera from "@assets/Emaar-Venera-at-The-Valley-–-3-4-Bed-Townhouses-from-AED-3-1M-_1782109740183.png";
+import imgGrandPolo1 from "@assets/Grand-Polo-Club-Resort-in-Dubai-09-03-2025_09_27_AM_1782109740185.png";
+import imgGrandPolo2 from "@assets/Emaar-Oasis-Villas-Properties-in-Dubai-Luxury-Homes-2025-09-01_1782109740186.png";
+import imgGrandPolo3 from "@assets/Grand-Polo-Club-Resort-Emaar-Premier-Equestrian_1782109740187.png";
+
+// --- Screenshot Gallery Data ---
+const funnelScreenshots = [
+  { img: imgGrandPolo1, label: "Grand Polo Club & Resort", tag: "Emaar · Funnel & SEO" },
+  { img: imgGrandPolo2, label: "Grand Polo — Exclusive Villas", tag: "Emaar · Funnel & SEO" },
+  { img: imgGrandPolo3, label: "Grand Polo — Equestrian Villas", tag: "Emaar · Funnel & SEO" },
+  { img: imgEmaarVenera, label: "Emaar Venera at The Valley", tag: "Emaar · Funnel & SEO" },
+  { img: imgMeriva, label: "Meriva Sunset Beachfront", tag: "Ellington Properties · Funnel" },
+  { img: imgSolar, label: "Solar Panel Landing Page", tag: "GHL Funnel" },
+  { img: imgRedfox, label: "RedFox Publishers", tag: "GHL Funnel" },
+];
+
+// --- Lightbox Component ---
+function Lightbox({ images, startIndex, onClose }: { images: typeof funnelScreenshots; startIndex: number; onClose: () => void }) {
+  const [current, setCurrent] = useState(startIndex);
+
+  const prev = useCallback(() => setCurrent(i => (i - 1 + images.length) % images.length), [images.length]);
+  const next = useCallback(() => setCurrent(i => (i + 1) % images.length), [images.length]);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === "ArrowLeft") prev();
+      if (e.key === "ArrowRight") next();
+    };
+    document.addEventListener("keydown", handler);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", handler);
+      document.body.style.overflow = "";
+    };
+  }, [onClose, prev, next]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-md p-4"
+      onClick={onClose}
+    >
+      {/* Close */}
+      <button onClick={onClose} className="absolute top-4 right-4 z-10 p-2 text-white/60 hover:text-white border border-white/10 hover:border-white/30 transition-colors">
+        <X className="w-5 h-5" />
+      </button>
+
+      {/* Counter */}
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 text-xs font-mono text-white/40">
+        {current + 1} / {images.length}
+      </div>
+
+      {/* Prev */}
+      {images.length > 1 && (
+        <button onClick={e => { e.stopPropagation(); prev(); }} className="absolute left-4 top-1/2 -translate-y-1/2 z-10 p-3 text-white/60 hover:text-primary border border-white/10 hover:border-primary/50 transition-colors bg-black/50">
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+      )}
+      {images.length > 1 && (
+        <button onClick={e => { e.stopPropagation(); next(); }} className="absolute right-4 top-1/2 -translate-y-1/2 z-10 p-3 text-white/60 hover:text-primary border border-white/10 hover:border-primary/50 transition-colors bg-black/50">
+          <ChevronLeft className="w-5 h-5 rotate-180" />
+        </button>
+      )}
+
+      {/* Image */}
+      <div className="max-w-4xl w-full max-h-[85vh] flex flex-col items-center gap-4" onClick={e => e.stopPropagation()}>
+        <motion.img
+          key={current}
+          initial={{ opacity: 0, scale: 0.97 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.2 }}
+          src={images[current].img}
+          alt={images[current].label}
+          className="max-h-[78vh] w-auto object-contain border border-white/10 shadow-2xl"
+        />
+        <div className="text-center">
+          <p className="text-white font-semibold">{images[current].label}</p>
+          <p className="text-primary text-xs font-mono mt-1">{images[current].tag}</p>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
 
 // --- Data ---
 const webDevProjects = [
@@ -229,9 +319,16 @@ function StickyNav() {
 }
 
 export default function Home() {
+  const [lightbox, setLightbox] = useState<{ index: number } | null>(null);
+
   return (
     <div className="min-h-screen bg-background text-foreground overflow-hidden font-sans selection:bg-primary selection:text-primary-foreground">
       <StickyNav />
+      {/* Lightbox */}
+      <AnimatePresence>
+        {lightbox && <Lightbox images={funnelScreenshots} startIndex={lightbox.index} onClose={() => setLightbox(null)} />}
+      </AnimatePresence>
+
       {/* Background Grid */}
       <div className="fixed inset-0 z-0 pointer-events-none opacity-[0.03]" style={{ backgroundImage: "linear-gradient(hsla(var(--primary)) 1px, transparent 1px), linear-gradient(90deg, hsla(var(--primary)) 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
       
@@ -426,6 +523,34 @@ export default function Home() {
               {funnelProjects.length}+ funnels built · UAE real estate, SaaS, coaching, property expos
             </p>
           </FadeIn>
+
+          {/* Screenshot Gallery */}
+          <FadeIn delay={0.05}>
+            <p className="text-xs font-mono uppercase tracking-[0.25em] text-primary mb-4">Featured work — click to view full page</p>
+          </FadeIn>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-14">
+            {funnelScreenshots.map((shot, i) => (
+              <FadeIn key={i} delay={i * 0.06}>
+                <button
+                  onClick={() => setLightbox({ index: i })}
+                  className="group relative w-full aspect-[9/16] overflow-hidden border border-border hover:border-primary transition-all duration-300 block bg-card"
+                >
+                  <img
+                    src={shot.img}
+                    alt={shot.label}
+                    className="w-full h-full object-cover object-top grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3">
+                    <p className="text-white text-xs font-bold leading-tight">{shot.label}</p>
+                    <p className="text-primary text-[10px] font-mono mt-0.5">{shot.tag}</p>
+                  </div>
+                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-primary/90 p-1">
+                    <ExternalLink className="w-3 h-3 text-primary-foreground" />
+                  </div>
+                </button>
+              </FadeIn>
+            ))}
+          </div>
 
           {/* Live-domain funnels */}
           <FadeIn delay={0.05}>
