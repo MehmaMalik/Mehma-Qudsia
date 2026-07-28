@@ -1,0 +1,83 @@
+Problem & Solution Document — for building in Base44
+
+Executive Summary
+A sanitaryware, tiles, and hardware retail store needs a Point of Sale system that can do two things most generic POS tools can't: (1) manage inventory that's fragmented into batches, brands, sizes, and dozens of near-identical variants (pipe fittings, tile lots, fixture finishes), and (2) run two pricing worlds at once — walk-in retail customers and wholesale/contractor accounts with credit terms.
+
+This document defines the real-world problem (backed by market research into how existing vendors in this space describe it), proposes a solution scoped specifically to what's buildable in Base44 as an MVP, and separates "build now" from "build later" so the project doesn't stall trying to replicate a full ERP on day one.
+
+Market Context — What's Already Out There
+This is not a greenfield problem. There's an active niche of vertical POS vendors selling directly into sanitaryware/tiles/hardware retail, mostly in Pakistan, India, and the US building-materials market. Worth knowing before building, so the product isn't reinventing a commodity — it should be tailored to this specific store rather than competing head-on with established ERPs.
+
+What existing vendors emphasize (and therefore what buyers in this category actually care about):
+
+Vendors selling into this exact vertical advertise variant, batch and serial tracking per item alongside retail, wholesale, and distribution price lists and customer credit and receivables with aging control — i.e., the two problems named in your job post (batch/variant inventory + wholesale/contractor billing) are the two headline features competitors lead with, not edge cases. On the inventory side, the common framing is that managing hundreds of items, sizes, and variants becomes confusing and prone to errors under manual systems, and that batch tracking is also difficult without dedicated software. On the wholesale/contractor side, vendors specifically call out the ability to manage contractor and bulk orders efficiently as a distinct capability from regular retail checkout — confirming contractor billing is treated as its own workflow, not just "give some customers a discount." Tiles specifically need unit-of-measure flexibility that generic POS lacks: the ability to sell by square feet or by unit, by box or by piece, with the system computing pricing and the number of tiles and boxes required automatically, plus visibility into back-order items and their expected dates for staff talking to customers. Hardware/fittings have a SKU explosion problem: a single fastener size can represent dozens of unique SKUs once you multiply by length, thread type, and finish — a generic POS cannot handle this level of complexity, which is exactly the "pipe fittings" case named in the job post. Reviewers of higher-end systems (e.g., matrix/grid inventory tools) note this kind of variant handling is usually the single biggest technical differentiator between a POS that can serve this vertical and one that can't — grid/matrix inventory for size and finish variants is considered a genuine strength worth paying for, not a nice-to-have.
+
+Implication for this project: the job post's two named requirements (batch/brand/size/variant inventory, and wholesale/contractor billing) are exactly the two features that separate a "works for this store" system from a "doesn't." Nail those two, and the rest of the POS (checkout, receipts, reporting) is comparatively standard and well-trodden.
+
+Who This Is For
+Primary user: Owner/manager of a sanitaryware, tiles, and hardware retail store who currently either uses a generic POS (or none at all) and is losing time and money to:
+
+Miscounted or misplaced stock across near-identical variants Manual, error-prone billing for bulk/contractor orders No clear picture of who owes what, and when
+
+Secondary users:
+
+Counter staff/cashiers doing daily billing A store accountant or the owner reconciling dues and stock at month-end Contractors/wholesale customers who receive credit and pay on account
+
+Core Problems to Solve
+Problem 1: Inventory is not "one item = one SKU"
+
+A single product line (e.g., a PVC pipe fitting) may vary by:
+
+Brand (e.g., Diamond, Master, Popular, Dadex — or your local supplier brands) Size (½", ¾", 1", 4", etc.) Type/variant (elbow, tee, coupler, reducer, socket) Batch/lot (different purchase batches may have different cost prices even for the "same" item) Unit of sale (piece, box, dozen, running foot, square foot for tiles)
+
+A generic POS treats each of these as one flat SKU list, which becomes unmanageable past a few hundred items and leads to stock mismatches, dead stock, and inability to answer "what do I actually have in ¾" elbows from Brand X, batch from March?"
+
+Problem 2: Two customers, two billing worlds
+
+Retail/walk-in: cash-and-carry, fixed shelf price, no credit. Wholesale/contractor: negotiated tiered pricing, bulk unit conversions (box↔piece, pallet↔box), running credit accounts ("on account"), partial payments, and aging receivables (who owes what, for how long).
+
+Running both through the same checkout flow without separating pricing logic and credit tracking causes billing errors and, over time, uncollected dues that the owner can't see clearly.
+
+Problem 3: No single source of truth
+
+Stock counts, sales, and dues currently likely live in separate registers/notebooks or disconnected spreadsheets, so they drift apart and nobody trusts the numbers by month-end.
+
+Proposed Solution
+A web-based POS/inventory system, built in Base44, structured around four modules. Scoped in two phases so the MVP is genuinely buildable and testable within a few weeks, not a multi-month ERP project.
+
+Module A — Product & Variant Catalog
+
+Each Product (e.g., "PVC Elbow") has one or more Variants (brand × size × type combination), each with its own SKU, cost price, and selling price. Each variant tracks stock by batch/lot, so incoming purchases at different cost prices don't get averaged away — you can see exactly which batch is being sold from and its margin. Support for alternate units of measure per item (e.g., pipe sold by the foot or by the length; tiles sold by the box or by square foot, with automatic box-to-sqft conversion at checkout). Low-stock and dead-stock alerts per variant, not just per product.
+
+Module B — Dual Pricing & Billing Engine
+
+Customer types: Retail (walk-in) vs. Wholesale/Contractor, set per customer record. Price lists: each variant can have a retail price and one or more wholesale/contractor price tiers (by volume or by customer group). Checkout flow supports both in one screen: cashier selects the customer (or "walk-in" default), and pricing + available payment terms adjust automatically. Credit/"on account" billing: contractor invoices can be marked partially or fully unpaid, added to that customer's running balance, with due dates. Bulk unit conversion at billing: e.g., sell "3 boxes + 4 pieces" and have the system compute total pieces and price correctly, matching how tile/fitting stores actually sell.
+
+Module C — Receivables & Contractor Accounts
+
+Per-contractor ledger: running balance, invoice history, payments received, aging (0–30 / 30–60 / 60+ days overdue). Simple statement generation per contractor (what they bought, what they paid, what's outstanding) — this is the single feature owners in this vertical seem to value most, since it directly answers "who owes me money and how much." Payment recording against specific invoices or as a general account credit.
+
+Module D — Reporting & Stock Control
+
+Daily sales summary (retail vs. wholesale split). Stock valuation by batch (so you know how much capital is tied up in unsold stock). Reorder alerts by variant, not just product. Basic staff-level sales tracking (who billed what, for accountability).
+
+Data Model (Base44 Collections)
+This is the schema to set up first in Base44 — get this right before building screens, since Base44 generates most of the app logic around your collections and their relationships.
+
+CollectionKey FieldsRelationshipsProductsname, category (tiles/sanitaryware/pipe fittings/hardware), descriptionhas many VariantsVariantsSKU, brand, size, type, unit of sale, retail price, wholesale price, reorder levelbelongs to Product; has many BatchesBatchesbatch/lot number, quantity, cost price, date received, supplierbelongs to VariantCustomersname, phone, type (retail/wholesale/contractor), credit limit, current balancehas many InvoicesInvoicesinvoice #, date, customer, line items, subtotal, discount, total, amount paid, status (paid/partial/unpaid)belongs to Customer; has many InvoiceLinesInvoiceLinesvariant, batch, quantity, unit price, unit type, line totalbelongs to Invoice and VariantPaymentsdate, customer, invoice (optional), amount, methodbelongs to CustomerSuppliersname, contact, items suppliedhas many BatchesStaffUsersname, role (cashier/manager/owner), permissions(Base44 built-in auth)
+
+Build Scope: MVP vs. Phase 2
+Being realistic about Base44's strengths (fast CRUD apps, built-in database/auth/hosting, good for internal tools and dashboards) and its known limits at this stage (weaker for heavy custom backend logic, hardware integrations, and true offline operation — it's positioned well for prototypes and internal tools but can hit a "complexity wall" for production-grade, high-reliability retail counters) — split the build like this:
+
+Phase 1 (MVP — build in Base44 directly):
+
+Product/Variant/Batch catalog with manual entry and CSV import Basic checkout screen with retail vs. wholesale pricing toggle Contractor accounts with running balance and manual payment recording Core reports: daily sales, stock on hand by variant, outstanding dues by customer Single-location, single-till, web-based (tablet or laptop at the counter)
+
+Phase 2 (once MVP is validated in real use):
+
+Barcode scanner integration for faster checkout (Base44's browser-based nature makes this workable with USB/Bluetooth scanners that act as keyboard input, but dedicated receipt printer support and offline-mode billing during internet outages are harder — plan for these as a later custom-dev add-on rather than expecting Base44 to handle them natively out of the box) Multi-branch stock transfers and consolidated reporting Automated purchase order suggestions based on reorder points WhatsApp/SMS payment reminders to contractors Supplier-side purchase order and goods-receipt workflow
+
+Why this split matters: trying to build offline billing, receipt-printer drivers, and multi-branch sync into a Base44 MVP on day one is the most common way these projects stall. Ship the catalog + dual billing + receivables first — that's the 80% of the value the job post is actually asking for — and treat hardware/offline resilience as a deliberate second phase, possibly requiring a developer to extend beyond Base44's native capabilities.
+
+Success Criteria for the MVP
+Store staff can look up any variant (brand + size + type) and know exact stock and which batch it's from in under 10 seconds. A contractor invoice with mixed retail/wholesale-style item pricing can be billed correctly in one checkout flow, without manual price lookup. The owner can pull up "who owes me money" for any contractor at any time and trust the number matches reality. Month-end stock count matches system stock within an acceptable margin (defines your reconciliation baseline).
