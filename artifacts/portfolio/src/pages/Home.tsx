@@ -4,6 +4,7 @@ import { ArrowUpRight, ChevronRight, Terminal, Code2, Layers, Briefcase, Mail, M
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
+import travelCeylonVideo from "@assets/Home_-_The_Travel_Ceylon_1785256166700.mp4";
 import imgMeriva from "@assets/Meriva-Sunset-Beachfront-Residences-by-Ellington-Properties-Du_1782109552903.png";
 import imgSolar from "@assets/Solar_Panel_Landing_Page_1782109606531.png";
 import imgRedfox from "@assets/Redfox_Publisher_1782109678739.png";
@@ -96,8 +97,8 @@ function Lightbox({ images, startIndex, onClose }: { images: typeof funnelScreen
 
 // --- Data ---
 const webDevProjects = [
-  { name: "Dreamhive", desc: "Dubai luxury real estate web app — complete build", url: "dreamhive.ae", type: "real-estate" },
-  { name: "The Travel Ceylon", desc: "Tour booking platform with custom dashboard", url: "thetravelceylon.com", type: "travel" },
+  { name: "Dreamhive", desc: "Dubai luxury real estate web app — complete build", url: "dreamhive.ae", type: "real-estate", video: undefined },
+  { name: "The Travel Ceylon", desc: "Tour booking platform with custom dashboard", url: "thetravelceylon.com", type: "travel", video: travelCeylonVideo },
   { name: "Better Way Real Estate", desc: "Custom WordPress real estate site (UAE)", url: "better-way.ae", type: "real-estate" },
   { name: "Coaching Alley", desc: "WordPress + ConvertKit email automation system", url: "coachingalley.com", type: "other" },
   { name: "Travelkit", desc: "Custom payment logic — different prices per payment method", url: "travelkit.lk", type: "travel" },
@@ -495,9 +496,19 @@ export default function Home() {
                 <a href={`https://${proj.url}`} target="_blank" rel="noopener noreferrer" className="block h-full">
                   <div className="group h-full flex flex-col bg-card border border-border p-6 transition-all duration-300 box-glow-hover">
                     <div className="aspect-video w-full bg-muted mb-6 overflow-hidden relative">
-                      {/* Using fallback generic image or generated image placeholder */}
                       <div className="absolute inset-0 bg-background/50 mix-blend-overlay group-hover:opacity-0 transition-opacity duration-500 z-10"></div>
-                      <img src={`/images/project-${proj.type === 'real-estate' ? 'real-estate' : 'ecommerce'}.png`} alt={proj.name} className="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700" onError={(e) => { e.currentTarget.src = "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1000&auto=format&fit=crop"; }} />
+                      {proj.video ? (
+                        <video
+                          src={proj.video}
+                          className="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700"
+                          autoPlay
+                          muted
+                          loop
+                          playsInline
+                        />
+                      ) : (
+                        <img src={`/images/project-${proj.type === 'real-estate' ? 'real-estate' : 'ecommerce'}.png`} alt={proj.name} className="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700" onError={(e) => { e.currentTarget.src = "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1000&auto=format&fit=crop"; }} />
+                      )}
                     </div>
                     <h3 className="text-xl font-bold text-white mb-2 group-hover:text-primary transition-colors">{proj.name}</h3>
                     <p className="text-muted-foreground text-sm flex-grow mb-4">{proj.desc}</p>
