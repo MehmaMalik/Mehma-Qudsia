@@ -3,6 +3,52 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <script>
+      (function() {
+        // Prevent Uncaught TypeError: Cannot set property fetch of #<Window> which has only a getter
+        if (typeof window !== "undefined") {
+          window.addEventListener("error", function(e) {
+            if (e && e.message && e.message.includes("Cannot set property fetch")) {
+              e.preventDefault();
+              e.stopImmediatePropagation();
+              return true;
+            }
+          }, true);
+
+          function patchDescriptor(obj, prop, descriptor) {
+            if ((obj === window || obj === globalThis || (typeof Window !== "undefined" && obj === Window.prototype)) && prop === "fetch") {
+              if (descriptor && descriptor.get && !descriptor.set) {
+                var originalGet = descriptor.get;
+                var customFetch = null;
+                return {
+                  configurable: true,
+                  enumerable: descriptor.enumerable !== undefined ? descriptor.enumerable : true,
+                  get: function() {
+                    return customFetch !== null ? customFetch : originalGet.call(this);
+                  },
+                  set: function(val) {
+                    customFetch = val;
+                  }
+                };
+              }
+            }
+            return descriptor;
+          }
+
+          var origDefineProperty = Object.defineProperty;
+          Object.defineProperty = function(obj, prop, descriptor) {
+            return origDefineProperty(obj, prop, patchDescriptor(obj, prop, descriptor));
+          };
+
+          if (typeof Reflect !== "undefined" && Reflect.defineProperty) {
+            var origReflectDefineProperty = Reflect.defineProperty;
+            Reflect.defineProperty = function(obj, prop, descriptor) {
+              return origReflectDefineProperty(obj, prop, patchDescriptor(obj, prop, descriptor));
+            };
+          }
+        }
+      })();
+    </script>
     <title>Mehma Qudsia — Founder of Brandit | Portfolio</title>
     <meta name="description" content="Portfolio of Mehma Qudsia, Founder of Brandit — showcasing high-performance websites, GoHighLevel funnels & automations, Shopify stores, and AI applications." />
     <meta name="robots" content="index, follow" />
