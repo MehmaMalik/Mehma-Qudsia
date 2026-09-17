@@ -65,22 +65,6 @@ function getStoredAccounts(): AdminAccount[] {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed)) return parsed;
     }
-    // Check legacy single credentials if any existed and upgrade
-    const legacyRaw = localStorage.getItem(AUTH_KEY);
-    if (legacyRaw) {
-      const legacy = JSON.parse(legacyRaw);
-      if (legacy && legacy.password && legacy.username) {
-        const legacyEmail = legacy.username.includes("@") ? legacy.username : `${legacy.username}@brandit.local`;
-        const initialAcc: AdminAccount = {
-          email: legacyEmail,
-          name: legacy.username,
-          password: legacy.password,
-          createdAt: new Date().toISOString(),
-        };
-        localStorage.setItem(ACCOUNTS_KEY, JSON.stringify([initialAcc]));
-        return [initialAcc];
-      }
-    }
     return [];
   } catch {
     return [];
@@ -358,6 +342,23 @@ export default function AdminDashboard() {
     setSecuritySuccess("Security credentials updated successfully!");
     showNotification("Account credentials updated successfully!");
     setTimeout(() => setSecuritySuccess(""), 4000);
+  };
+
+  const handleRemoveCurrentUser = () => {
+    if (!currentUser) return;
+    if (
+      window.confirm(
+        `Are you sure you want to remove the current user account (${currentUser.email}) from the CMS? You will be signed out.`
+      )
+    ) {
+      const remaining = getStoredAccounts().filter(
+        (acc) => acc.email.toLowerCase() !== currentUser.email.toLowerCase()
+      );
+      localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(remaining));
+      localStorage.removeItem(AUTH_KEY);
+      handleLogout();
+      showNotification("Current user account has been removed from the CMS.", "info");
+    }
   };
 
   // Handle URL change with auto domain extraction
@@ -660,7 +661,7 @@ export default function AdminDashboard() {
                       required
                       value={regName}
                       onChange={(e) => setRegName(e.target.value)}
-                      placeholder="Mehma Qudsia"
+                      placeholder="John"
                       className="w-full pl-9 pr-3 py-2.5 bg-[#0d0f14] border border-[#262c3a] rounded-lg text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-primary transition-colors font-mono"
                     />
                   </div>
@@ -820,10 +821,6 @@ export default function AdminDashboard() {
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             <span>Database Synced</span>
           </span>
-          <div className="hidden sm:flex items-center gap-1 text-slate-300 text-xs">
-            <User className="w-3.5 h-3.5 text-primary" />
-            <span>Howdy, <strong className="text-white">{currentUser?.name || currentUser?.email || "Admin"}</strong></span>
-          </div>
           <button
             type="button"
             onClick={handleLogout}
@@ -1944,6 +1941,7 @@ export default function AdminDashboard() {
                         required
                         value={securityName}
                         onChange={(e) => setSecurityName(e.target.value)}
+                        placeholder="John"
                         className="w-full pl-9 pr-3 py-2 bg-[#0d0f14] border border-[#262c3a] rounded text-xs text-white focus:outline-none focus:border-primary font-mono"
                       />
                     </div>
@@ -1997,10 +1995,20 @@ export default function AdminDashboard() {
                     </div>
                   </div>
 
-                  <div className="md:col-span-2 flex justify-end">
+                  <div className="md:col-span-2 flex flex-wrap items-center justify-between gap-3 pt-2">
+                    {currentUser && (
+                      <button
+                        type="button"
+                        onClick={handleRemoveCurrentUser}
+                        className="px-3 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs rounded transition-colors flex items-center gap-1.5 cursor-pointer font-mono"
+                      >
+                        <Trash2 className="w-3.5 h-3.5 text-rose-400" />
+                        <span>Remove Current User from CMS</span>
+                      </button>
+                    )}
                     <button
                       type="submit"
-                      className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs rounded transition-colors flex items-center gap-1.5 cursor-pointer"
+                      className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs rounded transition-colors flex items-center gap-1.5 cursor-pointer ml-auto"
                     >
                       <Save className="w-3.5 h-3.5" />
                       <span>Update Account Security</span>
