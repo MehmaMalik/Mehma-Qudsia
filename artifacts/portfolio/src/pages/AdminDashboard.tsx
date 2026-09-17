@@ -33,6 +33,8 @@ import {
   Key,
   Shield,
   User,
+  Mail,
+  UserPlus,
 } from "lucide-react";
 import {
   PortfolioItem,
@@ -43,31 +45,66 @@ import {
   MediaItem,
 } from "@/lib/portfolioDb";
 
+const ACCOUNTS_KEY = "brandit_cms_accounts_v2";
 const AUTH_KEY = "brandit_cms_auth_credentials_v1";
 const SESSION_KEY = "brandit_cms_auth_session_v1";
 
-function getStoredAuth() {
-  if (typeof window === "undefined") return { username: "admin", password: "admin123" };
+export interface AdminAccount {
+  email: string;
+  name: string;
+  password: string;
+  createdAt: string;
+}
+
+// Stored accounts helper (secure email-based account store)
+function getStoredAccounts(): AdminAccount[] {
+  if (typeof window === "undefined") return [];
   try {
-    const raw = localStorage.getItem(AUTH_KEY);
-    if (!raw) {
-      const defaultAuth = { username: "admin", password: "admin123" };
-      localStorage.setItem(AUTH_KEY, JSON.stringify(defaultAuth));
-      return defaultAuth;
+    const raw = localStorage.getItem(ACCOUNTS_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed;
+    }
+    // Check legacy single credentials if any existed and upgrade
+    const legacyRaw = localStorage.getItem(AUTH_KEY);
+    if (legacyRaw) {
+      const legacy = JSON.parse(legacyRaw);
+      if (legacy && legacy.password && legacy.username) {
+        const legacyEmail = legacy.username.includes("@") ? legacy.username : `${legacy.username}@brandit.local`;
+        const initialAcc: AdminAccount = {
+          email: legacyEmail,
+          name: legacy.username,
+          password: legacy.password,
+          createdAt: new Date().toISOString(),
+        };
+        localStorage.setItem(ACCOUNTS_KEY, JSON.stringify([initialAcc]));
+        return [initialAcc];
+      }
+    }
+    return [];
+  } catch {
+    return [];
+  }
+}
+
+function getStoredSessionUser(): AdminAccount | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(SESSION_KEY) || sessionStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    if (raw === "true") {
+      // Legacy flag without user object
+      const accounts = getStoredAccounts();
+      return accounts[0] || null;
     }
     return JSON.parse(raw);
   } catch {
-    return { username: "admin", password: "admin123" };
+    return null;
   }
 }
 
 function getStoredSession(): boolean {
-  if (typeof window === "undefined") return false;
-  try {
-    return localStorage.getItem(SESSION_KEY) === "true" || sessionStorage.getItem(SESSION_KEY) === "true";
-  } catch {
-    return false;
-  }
+  return getStoredSessionUser() !== null;
 }
 
 export default function AdminDashboard() {
@@ -75,18 +112,40 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<"dashboard" | "all" | "new" | "media" | "backup">("all");
   
   // Authentication State
+  const [currentUser, setCurrentUser] = useState<AdminAccount | null>(() => getStoredSessionUser());
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => getStoredSession());
-  const [authCredentials, setAuthCredentials] = useState<{ username: string; password: string }>(() => getStoredAuth());
-  const [loginUsername, setLoginUsername] = useState("");
+  
+  // Auth Form State: Login vs Create Account
+  const [authMode, setAuthMode] = useState<"login" | "register">(() => {
+    // If no accounts exist yet, prompt them directly to register their secure admin account
+    if (typeof window !== "undefined") {
+      const accs = getStoredAccounts();
+      return accs.length === 0 ? "register" : "login";
+    }
+    return "login";
+  });
+  
+  // Login form fields
+  const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
+  
+  // Register form fields
+  const [regName, setRegName] = useState("");
+  const [regEmail, setRegEmail] = useState("");
+  const [regPassword, setRegPassword] = useState("");
+  const [regConfirmPassword, setRegConfirmPassword] = useState("");
+  
   const [loginError, setLoginError] = useState("");
+  const [loginSuccessNotice, setLoginSuccessNotice] = useState("");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   // Credentials edit state inside Backup/Security tab
-  const [newUsername, setNewUsername] = useState(authCredentials.username);
+  const [securityName, setSecurityName] = useState(currentUser?.name || "");
+  const [securityEmail, setSecurityEmail] = useState(currentUser?.email || "");
   const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [securitySuccess, setSecuritySuccess] = useState("");
   
   // Search & Filter
@@ -141,73 +200,163 @@ export default function AdminDashboard() {
   const handleLogin = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     setLoginError("");
+    setLoginSuccessNotice("");
     setIsLoggingIn(true);
 
     setTimeout(() => {
-      const trimmedUser = loginUsername.trim();
+      const trimmedEmail = loginEmail.trim().toLowerCase();
       const trimmedPass = loginPassword.trim();
-      const currentCreds = getStoredAuth();
+      const accounts = getStoredAccounts();
 
-      // Check credentials (allow case-insensitive username match, and support default admin/admin123)
-      const isValidUser =
-        trimmedUser.toLowerCase() === currentCreds.username.toLowerCase() ||
-        trimmedUser.toLowerCase() === "admin" ||
-        trimmedUser.toLowerCase() === "mehma";
-      const isValidPass =
-        trimmedPass === currentCreds.password ||
-        trimmedPass === "admin123" ||
-        trimmedPass === "mehma2026";
+      if (accounts.length === 0) {
+        setLoginError("No admin accounts exist yet. Please register your email account below.");
+        setAuthMode("register");
+        setIsLoggingIn(false);
+        return;
+      }
 
-      if (isValidUser && isValidPass) {
+      // Find user by email or username
+      const matched = accounts.find(
+        (acc) => acc.email.toLowerCase() === trimmedEmail || acc.name.toLowerCase() === trimmedEmail
+      );
+
+      if (matched && matched.password === trimmedPass) {
+        setCurrentUser(matched);
         setIsAuthenticated(true);
+        const sessionPayload = JSON.stringify(matched);
         if (rememberMe) {
-          localStorage.setItem(SESSION_KEY, "true");
+          localStorage.setItem(SESSION_KEY, sessionPayload);
         } else {
-          sessionStorage.setItem(SESSION_KEY, "true");
+          sessionStorage.setItem(SESSION_KEY, sessionPayload);
         }
-        showNotification(`Welcome back, ${trimmedUser || "admin"}! Logged in to CMS.`);
+        showNotification(`Welcome back, ${matched.name || matched.email}! Logged in to CMS.`);
       } else {
-        setLoginError("Invalid username or password. Tip: Use demo credentials 'admin' / 'admin123'");
+        setLoginError("Invalid email or password. Please check your credentials.");
       }
       setIsLoggingIn(false);
     }, 350);
   };
 
-  const handleFillDemo = () => {
-    setLoginUsername("admin");
-    setLoginPassword("admin123");
+  const handleRegister = (e: React.FormEvent) => {
+    e.preventDefault();
     setLoginError("");
+    setLoginSuccessNotice("");
+
+    const name = regName.trim();
+    const email = regEmail.trim().toLowerCase();
+    const password = regPassword.trim();
+    const confirmPassword = regConfirmPassword.trim();
+
+    if (!name) {
+      setLoginError("Please enter your name or admin handle.");
+      return;
+    }
+
+    if (!email || !email.includes("@") || !email.includes(".")) {
+      setLoginError("Please enter a valid email address.");
+      return;
+    }
+
+    if (password.length < 6) {
+      setLoginError("Password must be at least 6 characters long for security.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setLoginError("Passwords do not match. Please re-enter.");
+      return;
+    }
+
+    const accounts = getStoredAccounts();
+    const alreadyExists = accounts.some((acc) => acc.email.toLowerCase() === email);
+
+    if (alreadyExists) {
+      setLoginError("An account with this email already exists. Please log in.");
+      setAuthMode("login");
+      setLoginEmail(email);
+      return;
+    }
+
+    const newAccount: AdminAccount = {
+      name,
+      email,
+      password,
+      createdAt: new Date().toISOString(),
+    };
+
+    const updatedAccounts = [...accounts, newAccount];
+    localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(updatedAccounts));
+
+    // Auto-login new account
+    setCurrentUser(newAccount);
+    setIsAuthenticated(true);
+    const sessionPayload = JSON.stringify(newAccount);
+    if (rememberMe) {
+      localStorage.setItem(SESSION_KEY, sessionPayload);
+    } else {
+      sessionStorage.setItem(SESSION_KEY, sessionPayload);
+    }
+
+    setRegName("");
+    setRegEmail("");
+    setRegPassword("");
+    setRegConfirmPassword("");
+    showNotification(`Account created successfully! Welcome to CMS, ${name}.`);
   };
 
   const handleLogout = () => {
     setIsAuthenticated(false);
+    setCurrentUser(null);
     localStorage.removeItem(SESSION_KEY);
     sessionStorage.removeItem(SESSION_KEY);
-    setLoginUsername("");
+    setLoginEmail("");
     setLoginPassword("");
     showNotification("You have been logged out of the CMS.", "info");
   };
 
   const handleSaveSecurity = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newUsername.trim()) {
-      showNotification("Username cannot be blank.", "error");
+    if (!securityEmail.trim() || !securityEmail.includes("@")) {
+      showNotification("A valid email address is required.", "error");
       return;
     }
-    if (newPassword.trim().length > 0 && newPassword.trim().length < 4) {
-      showNotification("Password must be at least 4 characters.", "error");
+    if (newPassword.trim().length > 0 && newPassword.trim().length < 6) {
+      showNotification("Password must be at least 6 characters long.", "error");
+      return;
+    }
+    if (newPassword.trim().length > 0 && newPassword.trim() !== confirmNewPassword.trim()) {
+      showNotification("New password and confirmation do not match.", "error");
       return;
     }
 
-    const updatedCreds = {
-      username: newUsername.trim(),
-      password: newPassword.trim() || authCredentials.password,
+    const accounts = getStoredAccounts();
+    const updatedAccounts = accounts.map((acc) => {
+      if (acc.email === currentUser?.email) {
+        return {
+          ...acc,
+          name: securityName.trim() || acc.name,
+          email: securityEmail.trim().toLowerCase(),
+          password: newPassword.trim() || acc.password,
+        };
+      }
+      return acc;
+    });
+
+    const updatedUser: AdminAccount = {
+      name: securityName.trim() || currentUser?.name || "Admin",
+      email: securityEmail.trim().toLowerCase(),
+      password: newPassword.trim() || currentUser?.password || "",
+      createdAt: currentUser?.createdAt || new Date().toISOString(),
     };
-    setAuthCredentials(updatedCreds);
-    localStorage.setItem(AUTH_KEY, JSON.stringify(updatedCreds));
+
+    localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(updatedAccounts));
+    setCurrentUser(updatedUser);
+    localStorage.setItem(SESSION_KEY, JSON.stringify(updatedUser));
+
     setNewPassword("");
-    setSecuritySuccess("Credentials updated successfully!");
-    showNotification("Admin credentials updated successfully!");
+    setConfirmNewPassword("");
+    setSecuritySuccess("Security credentials updated successfully!");
+    showNotification("Account credentials updated successfully!");
     setTimeout(() => setSecuritySuccess(""), 4000);
   };
 
@@ -355,8 +504,44 @@ export default function AdminDashboard() {
             </p>
           </div>
 
-          {/* Login Card */}
+          {/* Auth Card: Sign In or Create Account */}
           <div className="bg-[#161922] border border-[#262c3a] rounded-xl p-6 sm:p-8 shadow-2xl space-y-5">
+            {/* Mode Switcher Tabs */}
+            <div className="grid grid-cols-2 p-1 bg-[#0d0f14] border border-[#262c3a] rounded-lg">
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthMode("login");
+                  setLoginError("");
+                  setLoginSuccessNotice("");
+                }}
+                className={`py-2 px-3 text-xs font-semibold rounded-md transition-colors flex items-center justify-center gap-1.5 cursor-pointer ${
+                  authMode === "login"
+                    ? "bg-primary text-primary-foreground shadow"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                <LogIn className="w-3.5 h-3.5" />
+                <span>Sign In</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthMode("register");
+                  setLoginError("");
+                  setLoginSuccessNotice("");
+                }}
+                className={`py-2 px-3 text-xs font-semibold rounded-md transition-colors flex items-center justify-center gap-1.5 cursor-pointer ${
+                  authMode === "register"
+                    ? "bg-primary text-primary-foreground shadow"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                <UserPlus className="w-3.5 h-3.5" />
+                <span>Create Account</span>
+              </button>
+            </div>
+
             {loginError && (
               <div className="p-3 bg-rose-950/70 border border-rose-600/50 rounded-lg text-rose-200 text-xs flex items-start gap-2.5">
                 <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
@@ -367,110 +552,219 @@ export default function AdminDashboard() {
               </div>
             )}
 
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div>
-                <label className="block text-xs font-mono uppercase tracking-wider text-slate-300 mb-1.5">
-                  Username or Email
-                </label>
-                <div className="relative">
-                  <User className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    required
-                    value={loginUsername}
-                    onChange={(e) => setLoginUsername(e.target.value)}
-                    placeholder="admin"
-                    className="w-full pl-9 pr-3 py-2.5 bg-[#0d0f14] border border-[#262c3a] rounded-lg text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-primary transition-colors font-mono"
-                  />
-                </div>
+            {loginSuccessNotice && (
+              <div className="p-3 bg-emerald-950/70 border border-emerald-500/50 rounded-lg text-emerald-200 text-xs flex items-start gap-2.5">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                <div>{loginSuccessNotice}</div>
               </div>
+            )}
 
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="block text-xs font-mono uppercase tracking-wider text-slate-300">
-                    Password
+            {authMode === "login" ? (
+              /* LOGIN FORM */
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-mono uppercase tracking-wider text-slate-300 mb-1.5">
+                    Admin Email
                   </label>
+                  <div className="relative">
+                    <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="email"
+                      required
+                      value={loginEmail}
+                      onChange={(e) => setLoginEmail(e.target.value)}
+                      placeholder="admin@yourdomain.com"
+                      className="w-full pl-9 pr-3 py-2.5 bg-[#0d0f14] border border-[#262c3a] rounded-lg text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-primary transition-colors font-mono"
+                    />
+                  </div>
                 </div>
-                <div className="relative">
-                  <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    required
-                    value={loginPassword}
-                    onChange={(e) => setLoginPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full pl-9 pr-10 py-2.5 bg-[#0d0f14] border border-[#262c3a] rounded-lg text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-primary transition-colors font-mono"
-                  />
+
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-mono uppercase tracking-wider text-slate-300">
+                      Password
+                    </label>
+                  </div>
+                  <div className="relative">
+                    <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      required
+                      value={loginPassword}
+                      onChange={(e) => setLoginPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="w-full pl-9 pr-10 py-2.5 bg-[#0d0f14] border border-[#262c3a] rounded-lg text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-primary transition-colors font-mono"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-1">
+                  <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      className="rounded border-slate-700 bg-slate-900 text-primary focus:ring-primary"
+                    />
+                    <span>Remember Session</span>
+                  </label>
+
                   <button
                     type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+                    onClick={() => {
+                      setAuthMode("register");
+                      setLoginError("");
+                    }}
+                    className="text-xs font-mono text-primary hover:underline"
                   >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    Need an account? Sign up
                   </button>
                 </div>
-              </div>
-
-              <div className="flex items-center justify-between pt-1">
-                <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                    className="rounded border-slate-700 bg-slate-900 text-primary focus:ring-primary"
-                  />
-                  <span>Remember Me</span>
-                </label>
 
                 <button
-                  type="button"
-                  onClick={handleFillDemo}
-                  className="text-xs font-mono text-primary hover:underline"
+                  type="submit"
+                  disabled={isLoggingIn}
+                  className="w-full py-2.5 px-4 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs uppercase tracking-wider shadow transition-colors flex items-center justify-center gap-2 cursor-pointer mt-2"
                 >
-                  Fill Demo (admin/admin123)
+                  {isLoggingIn ? (
+                    <>
+                      <span className="w-3.5 h-3.5 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+                      <span>Authenticating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <LogIn className="w-4 h-4" />
+                      <span>Log In to CMS</span>
+                    </>
+                  )}
                 </button>
+              </form>
+            ) : (
+              /* REGISTRATION FORM */
+              <form onSubmit={handleRegister} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-mono uppercase tracking-wider text-slate-300 mb-1.5">
+                    Full Name / Handle
+                  </label>
+                  <div className="relative">
+                    <User className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      required
+                      value={regName}
+                      onChange={(e) => setRegName(e.target.value)}
+                      placeholder="Mehma Qudsia"
+                      className="w-full pl-9 pr-3 py-2.5 bg-[#0d0f14] border border-[#262c3a] rounded-lg text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-primary transition-colors font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-mono uppercase tracking-wider text-slate-300 mb-1.5">
+                    Admin Email Address
+                  </label>
+                  <div className="relative">
+                    <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="email"
+                      required
+                      value={regEmail}
+                      onChange={(e) => setRegEmail(e.target.value)}
+                      placeholder="admin@yourdomain.com"
+                      className="w-full pl-9 pr-3 py-2.5 bg-[#0d0f14] border border-[#262c3a] rounded-lg text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-primary transition-colors font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-mono uppercase tracking-wider text-slate-300 mb-1.5">
+                    Password (min. 6 characters)
+                  </label>
+                  <div className="relative">
+                    <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      required
+                      minLength={6}
+                      value={regPassword}
+                      onChange={(e) => setRegPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="w-full pl-9 pr-10 py-2.5 bg-[#0d0f14] border border-[#262c3a] rounded-lg text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-primary transition-colors font-mono"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-mono uppercase tracking-wider text-slate-300 mb-1.5">
+                    Confirm Password
+                  </label>
+                  <div className="relative">
+                    <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      required
+                      minLength={6}
+                      value={regConfirmPassword}
+                      onChange={(e) => setRegConfirmPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="w-full pl-9 pr-10 py-2.5 bg-[#0d0f14] border border-[#262c3a] rounded-lg text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-primary transition-colors font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-1">
+                  <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      className="rounded border-slate-700 bg-slate-900 text-primary focus:ring-primary"
+                    />
+                    <span>Remember Session</span>
+                  </label>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAuthMode("login");
+                      setLoginError("");
+                    }}
+                    className="text-xs font-mono text-primary hover:underline"
+                  >
+                    Already have an account? Sign in
+                  </button>
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full py-2.5 px-4 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs uppercase tracking-wider shadow transition-colors flex items-center justify-center gap-2 cursor-pointer mt-2"
+                >
+                  <UserPlus className="w-4 h-4" />
+                  <span>Register & Access CMS</span>
+                </button>
+              </form>
+            )}
+
+            {/* Security Notice */}
+            <div className="pt-3 border-t border-[#262c3a] text-center">
+              <div className="flex items-center justify-center gap-1.5 text-[11px] font-mono text-slate-400">
+                <Shield className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Protected Private Endpoint · Authorized Users Only</span>
               </div>
-
-              <button
-                type="submit"
-                disabled={isLoggingIn}
-                className="w-full py-2.5 px-4 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs uppercase tracking-wider shadow transition-colors flex items-center justify-center gap-2 cursor-pointer mt-2"
-              >
-                {isLoggingIn ? (
-                  <>
-                    <span className="w-3.5 h-3.5 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
-                    <span>Authenticating...</span>
-                  </>
-                ) : (
-                  <>
-                    <LogIn className="w-4 h-4" />
-                    <span>Log In to CMS</span>
-                  </>
-                )}
-              </button>
-            </form>
-
-            {/* Quick Demo Access Bar */}
-            <div className="pt-3 border-t border-[#262c3a] text-center space-y-2">
-              <p className="text-[11px] font-mono text-slate-400">
-                Default Credentials: <code className="text-primary bg-primary/10 px-1.5 py-0.5 rounded">admin</code> / <code className="text-primary bg-primary/10 px-1.5 py-0.5 rounded">admin123</code>
-              </p>
-              <button
-                type="button"
-                onClick={() => {
-                  setLoginUsername("admin");
-                  setLoginPassword("admin123");
-                  setTimeout(() => {
-                    setIsAuthenticated(true);
-                    localStorage.setItem(SESSION_KEY, "true");
-                    showNotification("Logged in via demo credentials!");
-                  }, 120);
-                }}
-                className="w-full py-2 px-3 rounded bg-[#1f2430] hover:bg-[#282f3f] border border-[#30384a] text-xs font-mono text-primary hover:text-white transition-colors flex items-center justify-center gap-1.5"
-              >
-                <Sparkles className="w-3.5 h-3.5 text-primary" />
-                <span>1-Click Instant Demo Login</span>
-              </button>
             </div>
           </div>
 
@@ -528,7 +822,7 @@ export default function AdminDashboard() {
           </span>
           <div className="hidden sm:flex items-center gap-1 text-slate-300 text-xs">
             <User className="w-3.5 h-3.5 text-primary" />
-            <span>Howdy, <strong className="text-white">{authCredentials.username}</strong></span>
+            <span>Howdy, <strong className="text-white">{currentUser?.name || currentUser?.email || "Admin"}</strong></span>
           </div>
           <button
             type="button"
@@ -1621,14 +1915,14 @@ export default function AdminDashboard() {
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-bold text-white flex items-center gap-2">
                     <Shield className="w-4 h-4 text-primary" />
-                    <span>CMS Login & Security Credentials</span>
+                    <span>CMS Account & Security Credentials</span>
                   </h3>
                   <span className="text-[11px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded">
                     Protected
                   </span>
                 </div>
                 <p className="text-xs text-slate-400">
-                  Update the username or password required to access this admin panel. Defaults to <code className="text-primary bg-primary/10 px-1 py-0.5 rounded">admin</code> / <code className="text-primary bg-primary/10 px-1 py-0.5 rounded">admin123</code>.
+                  Manage your authenticated admin profile and access credentials. Signed in as <strong className="text-white">{currentUser?.email}</strong>.
                 </p>
 
                 {securitySuccess && (
@@ -1641,15 +1935,15 @@ export default function AdminDashboard() {
                 <form onSubmit={handleSaveSecurity} className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
                   <div>
                     <label className="block text-xs font-mono text-slate-300 mb-1">
-                      Username
+                      Full Name / Admin Handle
                     </label>
                     <div className="relative">
                       <User className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                       <input
                         type="text"
                         required
-                        value={newUsername}
-                        onChange={(e) => setNewUsername(e.target.value)}
+                        value={securityName}
+                        onChange={(e) => setSecurityName(e.target.value)}
                         className="w-full pl-9 pr-3 py-2 bg-[#0d0f14] border border-[#262c3a] rounded text-xs text-white focus:outline-none focus:border-primary font-mono"
                       />
                     </div>
@@ -1657,7 +1951,23 @@ export default function AdminDashboard() {
 
                   <div>
                     <label className="block text-xs font-mono text-slate-300 mb-1">
-                      New Password (leave blank to keep current)
+                      Admin Email Address
+                    </label>
+                    <div className="relative">
+                      <Mail className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="email"
+                        required
+                        value={securityEmail}
+                        onChange={(e) => setSecurityEmail(e.target.value)}
+                        className="w-full pl-9 pr-3 py-2 bg-[#0d0f14] border border-[#262c3a] rounded text-xs text-white focus:outline-none focus:border-primary font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-mono text-slate-300 mb-1">
+                      New Password (min 6 chars, leave blank to keep current)
                     </label>
                     <div className="relative">
                       <Lock className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -1671,13 +1981,29 @@ export default function AdminDashboard() {
                     </div>
                   </div>
 
+                  <div>
+                    <label className="block text-xs font-mono text-slate-300 mb-1">
+                      Confirm New Password
+                    </label>
+                    <div className="relative">
+                      <Lock className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="password"
+                        placeholder="••••••••"
+                        value={confirmNewPassword}
+                        onChange={(e) => setConfirmNewPassword(e.target.value)}
+                        className="w-full pl-9 pr-3 py-2 bg-[#0d0f14] border border-[#262c3a] rounded text-xs text-white focus:outline-none focus:border-primary font-mono"
+                      />
+                    </div>
+                  </div>
+
                   <div className="md:col-span-2 flex justify-end">
                     <button
                       type="submit"
                       className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs rounded transition-colors flex items-center gap-1.5 cursor-pointer"
                     >
                       <Save className="w-3.5 h-3.5" />
-                      <span>Save New Credentials</span>
+                      <span>Update Account Security</span>
                     </button>
                   </div>
                 </form>
