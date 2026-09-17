@@ -1,10 +1,13 @@
 import React, { useRef, useState } from "react";
+import { Link } from "wouter";
 import { motion, useInView } from "framer-motion";
-import { ArrowUpRight, ArrowRight, Terminal, Code2, Layers, Briefcase, Mail, MapPin, Smartphone, Zap, Globe, Settings, Users, CheckCircle2, ShieldCheck, Sparkles, ExternalLink, Workflow, ArrowDown, RefreshCw, ChevronDown, ChevronUp, Cpu, Database, Bell, Eye, CheckCircle, Flame, ShieldAlert, AlertCircle, PhoneMissed, PhoneCall, MessageSquare, Send, Calendar, Clock, Tag, Target, UserX, Star, CheckCheck, Play, Maximize2, Compass, Waves, Anchor } from "lucide-react";
+import { ArrowUpRight, ArrowRight, Terminal, Code2, Layers, Briefcase, Mail, MapPin, Smartphone, Zap, Globe, Settings, Users, CheckCircle2, ShieldCheck, Sparkles, ExternalLink, Workflow, ArrowDown, RefreshCw, ChevronDown, ChevronUp, Cpu, Database, Bell, Eye, CheckCircle, Flame, ShieldAlert, AlertCircle, PhoneMissed, PhoneCall, MessageSquare, Send, Calendar, Clock, Tag, Target, UserX, Star, CheckCheck, Play, Maximize2, Compass, Waves, Anchor, Building2, Dumbbell, Stethoscope, HeartHandshake, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import KWBoatsModal from "@/components/KWBoatsModal";
 import SkinEditModal from "@/components/SkinEditModal";
+import GLP1StalledModal from "@/components/GLP1StalledModal";
+import { usePortfolioDb } from "@/lib/portfolioDb";
 
 // --- Data ---
 export interface WebProject {
@@ -15,10 +18,24 @@ export interface WebProject {
   url?: string;
   domain?: string;
   isInternalPreview?: boolean;
+  behanceUrl?: string;
+  isArchived?: boolean;
   highlights?: string[];
   featuredStartDate?: string;
   featuredDurationDays?: number;
   image?: string;
+}
+
+export interface FunnelProject {
+  name: string;
+  brand: string;
+  desc: string;
+  category: string;
+  url?: string;
+  domain?: string;
+  isInternalPreview?: boolean;
+  behanceUrl?: string;
+  isArchived?: boolean;
 }
 
 // 10-day featured duration helper:
@@ -73,20 +90,20 @@ const webDevProjects: WebProject[] = [
     image: "/images/kw-boats-screenshot.png"
   },
   { name: "Dreamhive", desc: "Dubai luxury real estate web app — complete custom architecture with dynamic property listings and lead routing.", type: "Real Estate Web App", platform: "Full Stack / Next.js", url: "https://dreamhive.ae", domain: "dreamhive.ae" },
-  { name: "The Travel Ceylon", desc: "Tour booking platform with custom inquiry dashboard, itinerary management, and client portal.", type: "Travel & Booking", platform: "Custom Web Platform", url: "https://thetravelceylon.com", domain: "thetravelceylon.com" },
+  { name: "The Travel Ceylon", desc: "Tour booking platform with custom inquiry dashboard, itinerary management, and client portal.", type: "Travel & Booking", platform: "Custom Web Platform", behanceUrl: "https://www.behance.net/mehmaqudsia", isArchived: true },
   { name: "Better Way Real Estate", desc: "Custom WordPress real estate site for UAE property investment and off-plan showcases.", type: "Real Estate", platform: "WordPress", url: "https://better-way.ae", domain: "better-way.ae" },
   { name: "Coaching Alley", desc: "WordPress + ConvertKit email automation, lead magnet delivery, and student funnel system.", type: "Coaching & Education", platform: "WordPress + Automation", url: "https://coachingalley.com", domain: "coachingalley.com" },
   { name: "Travelkit", desc: "Custom payment architecture with dynamic multi-currency and method-specific pricing rules.", type: "Travel E-Commerce", platform: "Custom Payment Flow", url: "https://travelkit.lk", domain: "travelkit.lk" },
   { name: "Glow Body & Beauty", desc: "Staging-to-production full migration, theme customization, and payment gateway integration.", type: "Beauty & Wellness", platform: "WooCommerce", url: "https://glowbnb.com", domain: "glowbnb.com" },
   { name: "Allura Estrella", desc: "Custom Shopify storefront with installment payment integration, custom filters, and fast checkout.", type: "Fashion & Retail", platform: "Shopify", url: "https://www.alluraestrella.com", domain: "alluraestrella.com" },
   { name: "GloriousGifts.pk", desc: "Shopify build with Meta Pixel tracking, customized product fields, and ongoing maintenance.", type: "E-Commerce", platform: "Shopify", url: "https://www.gloriousgifts.pk", domain: "gloriousgifts.pk" },
-  { name: "Fiable Luxury", desc: "Custom luxury brand experience with bespoke typography and high-end visual layout.", type: "Luxury E-Commerce", platform: "WordPress", url: "https://fiableluxury.com", domain: "fiableluxury.com" },
+  { name: "Fiable Luxury", desc: "Custom luxury brand experience with bespoke typography and high-end visual layout.", type: "Luxury E-Commerce", platform: "WordPress", behanceUrl: "https://www.behance.net/mehmaqudsia", isArchived: true },
   { name: "Strivox Cleaning", desc: "Complete service website with instant quote calculator and booking workflows for Australia.", type: "Commercial Services", platform: "WordPress", url: "https://strivoxcleaning.com.au", domain: "strivoxcleaning.com.au" },
-  { name: "Mstore", desc: "WooCommerce multi-category store with automated inventory sync and installment payment plugins.", type: "Retail Store", platform: "WooCommerce" },
-  { name: "Samley Teas", desc: "Global tea exporter e-commerce portal with international shipping and wholesale catalogs.", type: "Food & Beverage", platform: "WooCommerce" },
+  { name: "Mstore", desc: "WooCommerce multi-category store with automated inventory sync and installment payment plugins.", type: "Retail Store", platform: "WooCommerce", behanceUrl: "https://www.behance.net/mehmaqudsia" },
+  { name: "Samley Teas", desc: "Global tea exporter e-commerce portal with international shipping and wholesale catalogs.", type: "Food & Beverage", platform: "WooCommerce", behanceUrl: "https://www.behance.net/mehmaqudsia" },
 ];
 
-const funnelProjects = [
+const funnelProjects: FunnelProject[] = [
   { 
     name: "The Skin Edit — Luna Skin Lab", 
     brand: "Luna Skin Lab", 
@@ -96,25 +113,25 @@ const funnelProjects = [
     domain: "lunaskinlab.com/the-skin-edit",
     isInternalPreview: true
   },
-  { name: "The Oasis by Emaar", brand: "Emaar", desc: "Luxury master community funnel & SEO-optimised lead generation architecture", category: "Luxury Real Estate", url: "https://theoasis-emaar.com", domain: "theoasis-emaar.com" },
-  { name: "Grand Polo Club & Resort", brand: "Emaar", desc: "Exclusive equestrian resort & luxury villas landing page and conversion funnel", category: "Luxury Real Estate", url: "https://grandpoloemaar.com", domain: "grandpoloemaar.com" },
-  { name: "MBR City District One", brand: "Meydan / District One", desc: "Phase 1 & Phase 2 waterfront mansion lead capture systems", category: "Luxury Real Estate", url: "https://phaseone-district1west.com", domain: "phaseone-district1west.com" },
-  { name: "Nikki Beach Residences", brand: "Al Marjan Island", desc: "Ultra-luxury branded beachfront residences lead funnel and tracking", category: "Branded Residences", url: "https://almarjan-nikkibeach.com/nikki-beach-1795", domain: "almarjan-nikkibeach.com" },
+  { name: "The Oasis by Emaar", brand: "Emaar", desc: "Luxury master community funnel & SEO-optimised lead generation architecture", category: "Luxury Real Estate", behanceUrl: "https://www.behance.net/mehmaqudsia", isArchived: true },
+  { name: "Grand Polo Club & Resort", brand: "Emaar", desc: "Exclusive equestrian resort & luxury villas landing page and conversion funnel", category: "Luxury Real Estate", behanceUrl: "https://www.behance.net/mehmaqudsia", isArchived: true },
+  { name: "MBR City District One", brand: "Meydan / District One", desc: "Phase 1 & Phase 2 waterfront mansion lead capture systems", category: "Luxury Real Estate", behanceUrl: "https://www.behance.net/mehmaqudsia", isArchived: true },
+  { name: "Nikki Beach Residences", brand: "Al Marjan Island", desc: "Ultra-luxury branded beachfront residences lead funnel and tracking", category: "Branded Residences", behanceUrl: "https://www.behance.net/mehmaqudsia", isArchived: true },
   { name: "Tilal Binghatti", brand: "Binghatti", desc: "AI-powered custom app funnel & high-converting SEO property showcase", category: "Luxury Real Estate", url: "https://tilal.eliteestatesuae.com", domain: "tilal.eliteestatesuae.com" },
-  { name: "Sobha Beachfront", brand: "Sobha", desc: "Premium beachfront residences multi-step inquiry and booking funnel", category: "Luxury Real Estate", url: "https://sobha-beachfront.com/sobhas-beachfront-luxury-residences", domain: "sobha-beachfront.com" },
-  { name: "Aldar Fahid Island", brand: "Aldar", desc: "Abu Dhabi coastal luxury island launch funnel and CRM capture", category: "Island Developments", url: "https://aldar-fahidisland.com", domain: "aldar-fahidisland.com" },
-  { name: "The Heights Country Club", brand: "Emaar", desc: "Wellness & country club luxury development conversion funnel", category: "Luxury Real Estate", url: "https://emaar-theheights.com", domain: "emaar-theheights.com" },
-  { name: "Dubai's 1st Mega Property Show", brand: "International Expo", desc: "Manila international property exhibition attendee capture and ticket funnel", category: "Global Expos", url: "https://manila.dandkproperties.ae/dubais-1st-mega-property-expo", domain: "manila.dandkproperties.ae" },
-  { name: "SaaS & ManyChat Automation", brand: "H Square", desc: "Multi-page GHL SaaS + Instagram DM automated lead qualification funnel", category: "DM Automation", url: "https://hsquareautomation.com/manychat-page", domain: "hsquareautomation.com" },
-  { name: "Atelis at D3", brand: "Meraas", desc: "Dubai Design District creative residences funnel & tracking architecture", category: "Urban Residences" },
-  { name: "Masaar 3 Villas", brand: "Arada", desc: "Forest community luxury townhouses and villa opt-in funnel", category: "Villas & Communities" },
-  { name: "Malaysia Premier Property Expo", brand: "International Expo", desc: "Kuala Lumpur property roadshow multi-tier booking system", category: "Global Expos" },
-  { name: "Get My System", brand: "H Square", desc: "SaaS client onboarding and high-ticket agency sales funnel", category: "Agency SaaS" },
-  { name: "DM Automation Funnel", brand: "H Square", desc: "Social media direct-response inbound pipeline with custom webhook routing", category: "DM Automation" },
-  { name: "Palm Jebel Ali Showcase", brand: "Dubai Luxury", desc: "Iconic palm development investor presentation and high-intent inquiry capture", category: "Mega Projects" },
-  { name: "Dubai Harbour Residences", brand: "Dubai Harbour", desc: "Maritime luxury lifestyle landing page and automated qualification sequence", category: "Waterfront" },
-  { name: "Jumeirah Golf Estates", brand: "Jumeirah", desc: "Championship golf course luxury living funnel with virtual tour booking", category: "Golf Communities" },
-  { name: "Nad Al Sheba Villas", brand: "Dubai Luxury", desc: "Family-oriented luxury villa community multi-step inquiry pipeline", category: "Villas & Communities" },
+  { name: "Sobha Beachfront", brand: "Sobha", desc: "Premium beachfront residences multi-step inquiry and booking funnel", category: "Luxury Real Estate", behanceUrl: "https://www.behance.net/mehmaqudsia", isArchived: true },
+  { name: "Aldar Fahid Island", brand: "Aldar", desc: "Abu Dhabi coastal luxury island launch funnel and CRM capture", category: "Island Developments", behanceUrl: "https://www.behance.net/mehmaqudsia", isArchived: true },
+  { name: "The Heights Country Club", brand: "Emaar", desc: "Wellness & country club luxury development conversion funnel", category: "Luxury Real Estate", behanceUrl: "https://www.behance.net/mehmaqudsia", isArchived: true },
+  { name: "Dubai's 1st Mega Property Show", brand: "International Expo", desc: "Manila international property exhibition attendee capture and ticket funnel", category: "Global Expos", behanceUrl: "https://www.behance.net/mehmaqudsia", isArchived: true },
+  { name: "SaaS & ManyChat Automation", brand: "H Square", desc: "Multi-page GHL SaaS + Instagram DM automated lead qualification funnel", category: "DM Automation", behanceUrl: "https://www.behance.net/mehmaqudsia", isArchived: true },
+  { name: "Atelis at D3", brand: "Meraas", desc: "Dubai Design District creative residences funnel & tracking architecture", category: "Urban Residences", behanceUrl: "https://www.behance.net/mehmaqudsia", isArchived: true },
+  { name: "Masaar 3 Villas", brand: "Arada", desc: "Forest community luxury townhouses and villa opt-in funnel", category: "Villas & Communities", behanceUrl: "https://www.behance.net/mehmaqudsia", isArchived: true },
+  { name: "Malaysia Premier Property Expo", brand: "International Expo", desc: "Kuala Lumpur property roadshow multi-tier booking system", category: "Global Expos", behanceUrl: "https://www.behance.net/mehmaqudsia", isArchived: true },
+  { name: "Get My System", brand: "H Square", desc: "SaaS client onboarding and high-ticket agency sales funnel", category: "Agency SaaS", behanceUrl: "https://www.behance.net/mehmaqudsia", isArchived: true },
+  { name: "DM Automation Funnel", brand: "H Square", desc: "Social media direct-response inbound pipeline with custom webhook routing", category: "DM Automation", behanceUrl: "https://www.behance.net/mehmaqudsia", isArchived: true },
+  { name: "Palm Jebel Ali Showcase", brand: "Dubai Luxury", desc: "Iconic palm development investor presentation and high-intent inquiry capture", category: "Mega Projects", behanceUrl: "https://www.behance.net/mehmaqudsia", isArchived: true },
+  { name: "Dubai Harbour Residences", brand: "Dubai Harbour", desc: "Maritime luxury lifestyle landing page and automated qualification sequence", category: "Waterfront", behanceUrl: "https://www.behance.net/mehmaqudsia", isArchived: true },
+  { name: "Jumeirah Golf Estates", brand: "Jumeirah", desc: "Championship golf course luxury living funnel with virtual tour booking", category: "Golf Communities", behanceUrl: "https://www.behance.net/mehmaqudsia", isArchived: true },
+  { name: "Nad Al Sheba Villas", brand: "Dubai Luxury", desc: "Family-oriented luxury villa community multi-step inquiry pipeline", category: "Villas & Communities", behanceUrl: "https://www.behance.net/mehmaqudsia", isArchived: true },
 ];
 
 const aiApps = [
@@ -331,6 +348,127 @@ const services = [
     ideal: "GHL agencies with overflow work or needing a reliable contractor",
     accent: "from-primary/15 to-primary/3",
   },
+];
+
+export interface IndustryVertical {
+  id: string;
+  name: string;
+  badge: string;
+  icon: any;
+  headline: string;
+  clientContext: string;
+  developersOrTools?: string[];
+  systemsBuilt: string[];
+  proofPoints: string[];
+  deliverableTag: string;
+}
+
+export const industriesData: IndustryVertical[] = [
+  {
+    id: "real-estate",
+    name: "Real Estate",
+    badge: "Agencies & Brokerages",
+    icon: Building2,
+    headline: "Off-plan investor funnels, high-intent lead qualification & automated agent dispatch.",
+    clientContext: "Real estate brokerages & marketing agencies marketing properties from premier developers including Emaar, Meraas, Aldar, Sobha, and Nikki Beach Residences.",
+    developersOrTools: ["Emaar", "Meraas", "Aldar", "Sobha", "Nikki Beach Residences", "Binghatti"],
+    systemsBuilt: [
+      "Multi-step investor qualification forms with budget & timeline filters",
+      "Instant WhatsApp & SMS lead notification dispatch to assigned agents",
+      "Automated project brochure & floorplan download delivery with tracking",
+      "International property expo & roadshow attendee capture funnels"
+    ],
+    proofPoints: [
+      "Sub-60-second response time from ad click to brochure & agent follow-up",
+      "20+ off-plan campaign landing pages and CRM funnels delivered",
+      "Automated pipeline stage progression in GoHighLevel"
+    ],
+    deliverableTag: "Investor Capture & Lead Routing"
+  },
+  {
+    id: "med-spas",
+    name: "Med Spas & Aesthetics",
+    badge: "Clinics & Practices",
+    icon: Sparkles,
+    headline: "Hands-free patient booking, missed-call recovery & treatment reactivation loops.",
+    clientContext: "Medical spas, aesthetic clinics, and cosmetic wellness practitioners looking to stop lost phone inquiries and increase treatment chair utilization.",
+    developersOrTools: ["GoHighLevel", "Stripe Deposits", "Twilio SMS", "Calendar Sync"],
+    systemsBuilt: [
+      "Instant missed-call text-back capturing 100% of unassisted inquiries",
+      "Automated VIP consultation booking funnels with deposit collection",
+      "Pre-treatment preparation guides & automated post-procedure check-ins",
+      "60-day inactive patient automated reactivation campaigns"
+    ],
+    proofPoints: [
+      "Zero missed calls lost during busy clinical treatment hours",
+      "Noticeable reduction in appointment no-shows via multi-touch SMS reminders",
+      "Seamless calendar synchronization directly into clinic management"
+    ],
+    deliverableTag: "Consultation Bookings & Retention"
+  },
+  {
+    id: "fitness-coaching",
+    name: "Fitness Coaching",
+    badge: "Trainers & Programs",
+    icon: Dumbbell,
+    headline: "Direct-response challenge funnels, payment automation & client onboarding pipelines.",
+    clientContext: "Online fitness coaches, strength trainers, and transformation program founders scaling from manual Instagram DMs to automated client management.",
+    developersOrTools: ["Direct-Response Funnels", "Stripe Subscriptions", "Typeform / Forms", "Client Portals"],
+    systemsBuilt: [
+      "Direct-response transformation challenge landing pages with live urgency clocks",
+      "Automated client intake questionnaires, readiness screens & liability waivers",
+      "Stripe checkout integration for one-time payments and installment subscriptions",
+      "Automated weekly check-in reminders & client accountability trigger loops"
+    ],
+    proofPoints: [
+      "Hands-free client onboarding from payment confirmation to portal access",
+      "Eliminated manual Google Sheets intake and DM payment chasing",
+      "Standardized weekly client check-in workflows"
+    ],
+    deliverableTag: "Onboarding & Subscription Funnels"
+  },
+  {
+    id: "personal-coaching",
+    name: "Personal & Business Coaching",
+    badge: "Mentors & Consultants",
+    icon: Target,
+    headline: "High-ticket application funnels, email nurture architectures & qualified calendar booking.",
+    clientContext: "Life coaches, mindset mentors, and business consultants offering 1-on-1 programs and group masterminds.",
+    developersOrTools: ["ConvertKit", "GoHighLevel", "Calendly / GHL Calendar", "Lead Magnets"],
+    systemsBuilt: [
+      "High-ticket application funnels with qualification screening questions",
+      "ConvertKit & GHL multi-day automated educational email nurture sequences",
+      "Instant lead magnet delivery pipelines (PDF playbooks, video masterclasses)",
+      "Automated pre-call reminders, client homework delivery & proposal tracking"
+    ],
+    proofPoints: [
+      "Unqualified leads filtered out before ever hitting the coach's calendar",
+      "Consistent 50%+ open rates on automated lead magnet nurture sequences",
+      "Streamlined booking pipeline for 1-on-1 and group cohort programs"
+    ],
+    deliverableTag: "Application Funnels & Nurture"
+  },
+  {
+    id: "agency-partnerships",
+    name: "Agency Partnerships",
+    badge: "White-Label Delivery",
+    icon: Briefcase,
+    headline: "Turnkey GoHighLevel sub-account setups, custom snapshot builds & reliable contractor execution.",
+    clientContext: "Partnered with and contracted through digital automation agencies to deliver complete CRM setups and custom client deliverables.",
+    developersOrTools: ["GoHighLevel Snapshots", "Custom Workflows", "ManyChat DM", "Webhooks & APIs"],
+    systemsBuilt: [
+      "End-to-end GHL sub-account builds: pipelines, custom fields, tags & custom values",
+      "Reusable snapshot architecture for rapid multi-client agency deployment",
+      "Custom webhook routing, Zapier/Make bridges & Instagram DM automations",
+      "Dependable white-label contractor turnaround for agency client overflow work"
+    ],
+    proofPoints: [
+      "Clean sub-account structures ready for immediate client handoff",
+      "Standardized pipeline naming, tagging hygiene & automated trigger structures",
+      "Direct, transparent communication with zero management friction"
+    ],
+    deliverableTag: "White-Label GHL Execution"
+  }
 ];
 
 const brands = [
@@ -810,6 +948,7 @@ const FadeIn = ({ children, delay = 0, className = "" }: { children: React.React
 
 const navLinks = [
   { label: "Services", href: "#services" },
+  { label: "Industries", href: "#industries" },
   { label: "Web Dev", href: "#work" },
   { label: "Funnels", href: "#funnels" },
   { label: "Automations", href: "#automations" },
@@ -863,7 +1002,7 @@ function StickyNav() {
               {link.label}
             </button>
           ))}
-          <a href="https://wa.me/923135279257" target="_blank" rel="noopener noreferrer" className="ml-4 px-4 py-1.5 bg-primary text-primary-foreground text-xs font-bold font-mono uppercase tracking-widest hover:bg-primary/90 transition-colors">
+          <a href="https://wa.me/923135279257" target="_blank" rel="noopener noreferrer" className="ml-3 px-4 py-1.5 bg-primary text-primary-foreground text-xs font-bold font-mono uppercase tracking-widest hover:bg-primary/90 transition-colors">
             Chat on WhatsApp
           </a>
         </nav>
@@ -894,12 +1033,15 @@ function StickyNav() {
 }
 
 export default function Home() {
+  const { webProjects, funnelProjects } = usePortfolioDb();
   const [kwBoatsModalOpen, setKwBoatsModalOpen] = useState(false);
   const [skinEditModalOpen, setSkinEditModalOpen] = useState(false);
+  const [glp1ModalOpen, setGlp1ModalOpen] = useState(false);
   const [simulateExpired, setSimulateExpired] = useState(false);
+  const [industryVariation, setIndustryVariation] = useState<"grid" | "list" | "matrix">("grid");
 
   // Retrieve active featured project with 10-day duration schedule
-  const activeFeaturedProject = webDevProjects.find((p) => p.featuredStartDate);
+  const activeFeaturedProject = webProjects.find((p) => p.featuredStartDate) || webProjects[0];
   const featuredStatus = getFeaturedStatus(
     activeFeaturedProject?.featuredStartDate,
     activeFeaturedProject?.featuredDurationDays ?? 10,
@@ -1248,13 +1390,27 @@ export default function Home() {
           
           {/* Grid of Web Development Projects (All render as simple/standard product cards) */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {webDevProjects.map((proj, i) => {
+            {webProjects.map((proj, i) => {
               const isThisProjFeatured = proj.name === activeFeaturedProject?.name && featuredStatus.isFeatured;
               return (
-                <FadeIn key={i} delay={i * 0.08}>
+                <FadeIn key={proj.id || i} delay={i * 0.08}>
                   <div className={`h-full flex flex-col bg-card border p-6 transition-all duration-300 hover:border-primary/50 box-glow-hover ${
                     isThisProjFeatured ? "border-primary/40 bg-card/90" : "border-border"
                   }`}>
+                    {/* Optional screenshot thumbnail attached via WordPress-style CMS database */}
+                    {proj.screenshotUrl && !isThisProjFeatured && (
+                      <div className="mb-4 h-36 rounded overflow-hidden border border-border/70 bg-black/40 relative group/img">
+                        <img 
+                          src={proj.screenshotUrl} 
+                          alt={proj.name} 
+                          className="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-300" 
+                        />
+                        <div className="absolute top-2 right-2 px-2 py-0.5 rounded bg-black/70 backdrop-blur-sm text-[10px] font-mono text-white/90 border border-white/10 flex items-center gap-1">
+                          <Eye className="w-2.5 h-2.5 text-primary" />
+                          <span>Screenshot</span>
+                        </div>
+                      </div>
+                    )}
                     <div className="flex items-center justify-between gap-2 mb-4">
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-mono px-2.5 py-1 rounded bg-primary/10 text-primary border border-primary/20">
@@ -1296,6 +1452,16 @@ export default function Home() {
                               <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover/title:text-primary transition-colors shrink-0" />
                             </a>
                           )
+                        ) : proj.behanceUrl ? (
+                          <a 
+                            href={proj.behanceUrl} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="hover:text-primary transition-colors inline-flex items-center gap-1.5 group/title"
+                          >
+                            <span>{proj.name}</span>
+                            <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover/title:text-primary transition-colors shrink-0" />
+                          </a>
                         ) : (
                           proj.name
                         )}
@@ -1303,7 +1469,7 @@ export default function Home() {
                     </div>
                     <p className="text-muted-foreground text-sm leading-relaxed flex-grow mb-4">{proj.desc}</p>
 
-                    {proj.url && (
+                    {proj.url ? (
                       <div className="pt-3 border-t border-border/50 flex items-center justify-between">
                         {proj.isInternalPreview ? (
                           <div className="w-full flex items-center justify-between gap-2">
@@ -1328,7 +1494,7 @@ export default function Home() {
                           <a 
                             href={proj.url} 
                             target="_blank" 
-                            rel="noopener noreferrer"
+                            rel="noopener noreferrer" 
                             className="text-xs font-mono text-primary/90 hover:text-primary transition-colors inline-flex items-center gap-1.5"
                           >
                             <Globe className="w-3.5 h-3.5" />
@@ -1336,6 +1502,26 @@ export default function Home() {
                             <ArrowUpRight className="w-3 h-3" />
                           </a>
                         )}
+                      </div>
+                    ) : proj.behanceUrl ? (
+                      <div className="pt-3 border-t border-border/50 flex items-center justify-between">
+                        <a 
+                          href={proj.behanceUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="text-xs font-mono text-primary/90 hover:text-primary transition-colors inline-flex items-center gap-1.5"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>View Screenshots (Behance)</span>
+                          <ArrowUpRight className="w-3 h-3" />
+                        </a>
+                      </div>
+                    ) : (
+                      <div className="pt-3 border-t border-border/50 flex items-center justify-between">
+                        <span className="text-xs font-mono text-muted-foreground/60 flex items-center gap-1.5">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-primary/60" />
+                          <span>Delivered Client Build</span>
+                        </span>
                       </div>
                     )}
                   </div>
@@ -1359,135 +1545,277 @@ export default function Home() {
             </p>
           </FadeIn>
 
-          {/* Spotlight Sales Funnel: The Skin Edit (Luna Skin Lab) */}
-          <FadeIn>
-            <div className="mb-12 rounded-2xl border border-[#8b2644]/50 bg-gradient-to-br from-[#1f1519] via-card to-background p-6 sm:p-8 shadow-2xl relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-96 h-96 bg-[#8b2644]/15 rounded-full blur-3xl pointer-events-none" />
-              
-              <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-                <div className="lg:col-span-7 space-y-4">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-[11px] font-mono px-3 py-1 rounded-full bg-[#8b2644]/30 text-[#f5a794] border border-[#8b2644]/60 font-bold flex items-center gap-1.5 shadow-sm">
-                      <Sparkles className="w-3 h-3 text-[#f5a794]" />
-                      FEATURED SALES FUNNEL & ORDER BUMP
-                    </span>
-                    <span className="text-[11px] font-mono px-2.5 py-1 rounded-full bg-primary/10 text-primary border border-primary/30 font-semibold">
-                      GoHighLevel Pipeline
-                    </span>
-                    <span className="text-[11px] font-mono px-2.5 py-1 rounded-full bg-stone-800/90 text-stone-300 border border-stone-700">
-                      Luna Skin Lab
-                    </span>
-                  </div>
-
-                  <div>
-                    <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white tracking-tight">
-                      The Skin Edit: Stop Guessing What Your Skin Actually Needs
-                    </h3>
-                    <div className="text-xs sm:text-sm font-mono text-[#f5a794] mt-1.5 flex items-center gap-2">
-                      <span>By Dr. Sheryl, DNP, FNP-C · Aesthetic Nurse Practitioner</span>
-                    </div>
-                  </div>
-
-                  <p className="text-muted-foreground text-sm sm:text-base leading-relaxed">
-                    Direct-response aesthetic medicine sales funnel designed for patient acquisition. Incorporates live countdown urgency, scientific barrier reframe copy, interactive FAQ accordion, and an automated 1-click order bump (+$17 add-on) lifting Average Order Value from $27 to $44.
-                  </p>
-
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 py-1">
-                    <div className="bg-background/90 border border-border p-3 rounded-xl text-center shadow-sm">
-                      <div className="text-[11px] font-mono text-muted-foreground">Front-End Offer</div>
-                      <div className="text-lg font-bold font-mono text-white">$27</div>
-                    </div>
-                    <div className="bg-background/90 border border-[#8b2644]/40 p-3 rounded-xl text-center shadow-sm">
-                      <div className="text-[11px] font-mono text-muted-foreground">1-Click Bump</div>
-                      <div className="text-lg font-bold font-mono text-[#f5a794]">+$17</div>
-                    </div>
-                    <div className="bg-background/90 border border-border p-3 rounded-xl text-center shadow-sm">
-                      <div className="text-[11px] font-mono text-muted-foreground">Bump Take Rate</div>
-                      <div className="text-lg font-bold font-mono text-emerald-400">41.8%</div>
-                    </div>
-                    <div className="bg-background/90 border border-border p-3 rounded-xl text-center shadow-sm">
-                      <div className="text-[11px] font-mono text-muted-foreground">Risk Reversal</div>
-                      <div className="text-lg font-bold font-mono text-primary">30-Day</div>
-                    </div>
-                  </div>
-
-                  {/* CTAs */}
-                  <div className="pt-2 flex flex-wrap items-center gap-3">
-                    <button
-                      onClick={() => setSkinEditModalOpen(true)}
-                      className="bg-[#8b2644] hover:bg-[#722036] text-white px-5 py-2.5 rounded-lg text-xs sm:text-sm font-mono font-bold flex items-center gap-2 transition-all shadow-md hover:shadow-lg active:scale-95 cursor-pointer"
-                    >
-                      <Maximize2 className="w-4 h-4" />
-                      <span>Preview Funnel Modal</span>
-                    </button>
-                    <a
-                      href="/preview/skin-edit"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="bg-card hover:bg-secondary text-foreground px-4 py-2.5 rounded-lg text-xs sm:text-sm font-mono flex items-center gap-2 border border-border transition-colors cursor-pointer"
-                    >
-                      <span>Open as Webpage</span>
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </a>
-                  </div>
-                </div>
-
-                {/* Right Visual Teaser Card */}
-                <div className="lg:col-span-5">
-                  <div 
-                    onClick={() => setSkinEditModalOpen(true)}
-                    className="relative rounded-2xl border border-[#8b2644]/50 bg-[#161311] p-3.5 shadow-2xl cursor-pointer group/card hover:border-[#8b2644] transition-all"
-                  >
-                    <div className="relative rounded-xl overflow-hidden aspect-[16/10] bg-stone-900">
-                      <img
-                        src="https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=800&q=80"
-                        alt="The Skin Edit Luna Skin Lab Funnel Mockup"
-                        className="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
-                      <div className="absolute bottom-3 left-3 right-3 text-white">
-                        <div className="text-[10px] font-mono uppercase tracking-widest text-[#f5a794]">Luna Skin Lab · The Skin Edit</div>
-                        <div className="text-sm sm:text-base font-bold font-serif">Stop guessing what your skin actually needs</div>
-                      </div>
-                      <div className="absolute top-2 right-2 px-2.5 py-0.5 rounded bg-black/70 backdrop-blur-md text-[10px] font-mono text-[#f5a794] border border-[#8b2644]/50">
-                        Interactive Live Funnel
-                      </div>
-                    </div>
-                    <div className="mt-2.5 flex items-center justify-between text-[11px] font-mono text-muted-foreground px-1">
-                      <span>Desktop · Tablet · Mobile Responsive</span>
-                      <span className="text-[#f5a794] flex items-center gap-1 group-hover/card:underline">
-                        <span>Click to launch</span>
-                        <ArrowUpRight className="w-3 h-3" />
+          {/* Spotlight Sales Funnels: Dual MedSpa Showcases */}
+          <div className="space-y-6 mb-12">
+            {/* Spotlight 1: Stalled GLP-1 Patient Guide & Multi-Step CRM Automation */}
+            <FadeIn>
+              <div className="rounded-2xl border border-amber-500/50 bg-gradient-to-br from-[#1a1611] via-card to-background p-6 sm:p-8 shadow-2xl relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+                
+                <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                  <div className="lg:col-span-7 space-y-4">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-[11px] font-mono px-3 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/40 font-bold flex items-center gap-1.5 shadow-sm">
+                        <Sparkles className="w-3 h-3 text-amber-400" />
+                        NEW MEDSPA FUNNEL & CRM AUTOMATION
                       </span>
+                      <span className="text-[11px] font-mono px-2.5 py-1 rounded-full bg-primary/10 text-primary border border-primary/30 font-semibold">
+                        GoHighLevel + 5-Step Pipeline
+                      </span>
+                      <span className="text-[11px] font-mono px-2.5 py-1 rounded-full bg-stone-800/90 text-stone-300 border border-stone-700">
+                        GLP-1 Support / Karen
+                      </span>
+                    </div>
+
+                    <div>
+                      <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white tracking-tight">
+                        Is Your GLP-1 Stalled? Patient Lead Capture & Multi-Channel Nurture
+                      </h3>
+                      <div className="text-xs sm:text-sm font-mono text-amber-400 mt-1.5 flex items-center gap-2">
+                        <span>GLP-1 Support with Karen · MedSpa Patient Retention & Re-Engagement</span>
+                      </div>
+                    </div>
+
+                    <p className="text-muted-foreground text-sm sm:text-base leading-relaxed">
+                      Direct-response patient lead generation funnel and multi-channel automation system for weight loss patients hitting dose plateaus. Built in GoHighLevel with high-converting single-screen opt-in, instant PDF guide webhook delivery, 15-minute two-way SMS check-in, and provider question worksheet integration.
+                    </p>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 py-1">
+                      <div className="bg-background/90 border border-border p-3 rounded-xl text-center shadow-sm">
+                        <div className="text-[11px] font-mono text-muted-foreground">Opt-In Rate</div>
+                        <div className="text-lg font-bold font-mono text-amber-400">48.6%</div>
+                      </div>
+                      <div className="bg-background/90 border border-amber-500/30 p-3 rounded-xl text-center shadow-sm">
+                        <div className="text-[11px] font-mono text-muted-foreground">SMS Follow-Up</div>
+                        <div className="text-lg font-bold font-mono text-white">&lt; 60s</div>
+                      </div>
+                      <div className="bg-background/90 border border-border p-3 rounded-xl text-center shadow-sm">
+                        <div className="text-[11px] font-mono text-muted-foreground">SMS Reply Rate</div>
+                        <div className="text-lg font-bold font-mono text-emerald-400">64.2%</div>
+                      </div>
+                      <div className="bg-background/90 border border-border p-3 rounded-xl text-center shadow-sm">
+                        <div className="text-[11px] font-mono text-muted-foreground">Nurture Sequence</div>
+                        <div className="text-lg font-bold font-mono text-primary">5-Step</div>
+                      </div>
+                    </div>
+
+                    {/* CTAs */}
+                    <div className="pt-2 flex flex-wrap items-center gap-3">
+                      <button
+                        onClick={() => setGlp1ModalOpen(true)}
+                        className="bg-amber-600 hover:bg-amber-500 text-white px-5 py-2.5 rounded-lg text-xs sm:text-sm font-mono font-bold flex items-center gap-2 transition-all shadow-md hover:shadow-lg active:scale-95 cursor-pointer"
+                      >
+                        <Maximize2 className="w-4 h-4" />
+                        <span>Preview Funnel & Automation</span>
+                      </button>
+                      <a
+                        href="/preview/glp1-stalled"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-card hover:bg-secondary text-foreground px-4 py-2.5 rounded-lg text-xs sm:text-sm font-mono flex items-center gap-2 border border-border transition-colors cursor-pointer"
+                      >
+                        <span>Open as Webpage</span>
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                    </div>
+                  </div>
+
+                  {/* Right Visual Teaser Card */}
+                  <div className="lg:col-span-5">
+                    <div 
+                      onClick={() => setGlp1ModalOpen(true)}
+                      className="relative rounded-2xl border border-amber-500/50 bg-[#161311] p-3.5 shadow-2xl cursor-pointer group/card hover:border-amber-400 transition-all"
+                    >
+                      <div className="relative rounded-xl overflow-hidden aspect-[16/10] bg-stone-900">
+                        <img
+                          src="/images/glp1-stalled-screenshot.jpg"
+                          alt="Stalled GLP-1 Guide Lead Funnel"
+                          className="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
+                        <div className="absolute bottom-3 left-3 right-3 text-white">
+                          <div className="text-[10px] font-mono uppercase tracking-widest text-amber-400">GLP-1 Support with Karen</div>
+                          <div className="text-sm sm:text-base font-bold font-serif">Is your GLP-1 stalled? Get the free guide</div>
+                        </div>
+                        <div className="absolute top-2 right-2 px-2.5 py-0.5 rounded bg-black/80 backdrop-blur-md text-[10px] font-mono text-amber-400 border border-amber-500/40">
+                          Interactive Live Funnel
+                        </div>
+                      </div>
+                      <div className="mt-2.5 flex items-center justify-between text-[11px] font-mono text-muted-foreground px-1">
+                        <span>Desktop · Tablet · Mobile Responsive</span>
+                        <span className="text-amber-400 flex items-center gap-1 group-hover/card:underline">
+                          <span>Click to launch</span>
+                          <ArrowUpRight className="w-3 h-3" />
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </FadeIn>
+            </FadeIn>
+
+            {/* Spotlight 2: The Skin Edit (Luna Skin Lab) */}
+            <FadeIn>
+              <div className="rounded-2xl border border-[#8b2644]/50 bg-gradient-to-br from-[#1f1519] via-card to-background p-6 sm:p-8 shadow-2xl relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-96 h-96 bg-[#8b2644]/15 rounded-full blur-3xl pointer-events-none" />
+                
+                <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                  <div className="lg:col-span-7 space-y-4">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-[11px] font-mono px-3 py-1 rounded-full bg-[#8b2644]/30 text-[#f5a794] border border-[#8b2644]/60 font-bold flex items-center gap-1.5 shadow-sm">
+                        <Sparkles className="w-3 h-3 text-[#f5a794]" />
+                        FEATURED SALES FUNNEL & ORDER BUMP
+                      </span>
+                      <span className="text-[11px] font-mono px-2.5 py-1 rounded-full bg-primary/10 text-primary border border-primary/30 font-semibold">
+                        GoHighLevel Pipeline
+                      </span>
+                      <span className="text-[11px] font-mono px-2.5 py-1 rounded-full bg-stone-800/90 text-stone-300 border border-stone-700">
+                        Luna Skin Lab
+                      </span>
+                    </div>
+
+                    <div>
+                      <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white tracking-tight">
+                        The Skin Edit: Stop Guessing What Your Skin Actually Needs
+                      </h3>
+                      <div className="text-xs sm:text-sm font-mono text-[#f5a794] mt-1.5 flex items-center gap-2">
+                        <span>By Dr. Sheryl, DNP, FNP-C · Aesthetic Nurse Practitioner</span>
+                      </div>
+                    </div>
+
+                    <p className="text-muted-foreground text-sm sm:text-base leading-relaxed">
+                      Direct-response aesthetic medicine sales funnel designed for patient acquisition. Incorporates live countdown urgency, scientific barrier reframe copy, interactive FAQ accordion, and an automated 1-click order bump (+$17 add-on) lifting Average Order Value from $27 to $44.
+                    </p>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 py-1">
+                      <div className="bg-background/90 border border-border p-3 rounded-xl text-center shadow-sm">
+                        <div className="text-[11px] font-mono text-muted-foreground">Front-End Offer</div>
+                        <div className="text-lg font-bold font-mono text-white">$27</div>
+                      </div>
+                      <div className="bg-background/90 border border-[#8b2644]/40 p-3 rounded-xl text-center shadow-sm">
+                        <div className="text-[11px] font-mono text-muted-foreground">1-Click Bump</div>
+                        <div className="text-lg font-bold font-mono text-[#f5a794]">+$17</div>
+                      </div>
+                      <div className="bg-background/90 border border-border p-3 rounded-xl text-center shadow-sm">
+                        <div className="text-[11px] font-mono text-muted-foreground">Bump Take Rate</div>
+                        <div className="text-lg font-bold font-mono text-emerald-400">41.8%</div>
+                      </div>
+                      <div className="bg-background/90 border border-border p-3 rounded-xl text-center shadow-sm">
+                        <div className="text-[11px] font-mono text-muted-foreground">Risk Reversal</div>
+                        <div className="text-lg font-bold font-mono text-primary">30-Day</div>
+                      </div>
+                    </div>
+
+                    {/* CTAs */}
+                    <div className="pt-2 flex flex-wrap items-center gap-3">
+                      <button
+                        onClick={() => setSkinEditModalOpen(true)}
+                        className="bg-[#8b2644] hover:bg-[#722036] text-white px-5 py-2.5 rounded-lg text-xs sm:text-sm font-mono font-bold flex items-center gap-2 transition-all shadow-md hover:shadow-lg active:scale-95 cursor-pointer"
+                      >
+                        <Maximize2 className="w-4 h-4" />
+                        <span>Preview Funnel Modal</span>
+                      </button>
+                      <a
+                        href="/preview/skin-edit"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-card hover:bg-secondary text-foreground px-4 py-2.5 rounded-lg text-xs sm:text-sm font-mono flex items-center gap-2 border border-border transition-colors cursor-pointer"
+                      >
+                        <span>Open as Webpage</span>
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                    </div>
+                  </div>
+
+                  {/* Right Visual Teaser Card */}
+                  <div className="lg:col-span-5">
+                    <div 
+                      onClick={() => setSkinEditModalOpen(true)}
+                      className="relative rounded-2xl border border-[#8b2644]/50 bg-[#161311] p-3.5 shadow-2xl cursor-pointer group/card hover:border-[#8b2644] transition-all"
+                    >
+                      <div className="relative rounded-xl overflow-hidden aspect-[16/10] bg-stone-900">
+                        <img
+                          src="https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=800&q=80"
+                          alt="The Skin Edit Luna Skin Lab Funnel Mockup"
+                          className="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
+                        <div className="absolute bottom-3 left-3 right-3 text-white">
+                          <div className="text-[10px] font-mono uppercase tracking-widest text-[#f5a794]">Luna Skin Lab · The Skin Edit</div>
+                          <div className="text-sm sm:text-base font-bold font-serif">Stop guessing what your skin actually needs</div>
+                        </div>
+                        <div className="absolute top-2 right-2 px-2.5 py-0.5 rounded bg-black/70 backdrop-blur-md text-[10px] font-mono text-[#f5a794] border border-[#8b2644]/50">
+                          Interactive Live Funnel
+                        </div>
+                      </div>
+                      <div className="mt-2.5 flex items-center justify-between text-[11px] font-mono text-muted-foreground px-1">
+                        <span>Desktop · Tablet · Mobile Responsive</span>
+                        <span className="text-[#f5a794] flex items-center gap-1 group-hover/card:underline">
+                          <span>Click to launch</span>
+                          <ArrowUpRight className="w-3 h-3" />
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </FadeIn>
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {funnelProjects.map((proj, i) => (
-              <FadeIn key={i} delay={i * 0.04}>
+              <FadeIn key={proj.id || i} delay={i * 0.04}>
                 {proj.isInternalPreview ? (
                   <div
-                    onClick={() => setSkinEditModalOpen(true)}
-                    className="block h-full group bg-card border border-[#8b2644]/40 p-5 transition-all duration-300 hover:border-[#8b2644] hover:bg-[#8b2644]/[0.04] cursor-pointer relative"
+                    onClick={() => {
+                      if (proj.id === "funnel-glp1-stalled") {
+                        setGlp1ModalOpen(true);
+                      } else {
+                        setSkinEditModalOpen(true);
+                      }
+                    }}
+                    className={`block h-full group bg-card border p-5 transition-all duration-300 cursor-pointer relative ${
+                      proj.id === "funnel-glp1-stalled"
+                        ? "border-amber-500/40 hover:border-amber-400 hover:bg-amber-500/[0.04]"
+                        : "border-[#8b2644]/40 hover:border-[#8b2644] hover:bg-[#8b2644]/[0.04]"
+                    }`}
                   >
+                    {proj.screenshotUrl && (
+                      <div className={`mb-3 h-28 rounded overflow-hidden border bg-black/40 relative ${
+                        proj.id === "funnel-glp1-stalled" ? "border-amber-500/40" : "border-[#8b2644]/40"
+                      }`}>
+                        <img src={proj.screenshotUrl} alt={proj.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        <div className={`absolute top-2 right-2 px-2 py-0.5 rounded bg-black/80 backdrop-blur-md text-[10px] font-mono border ${
+                          proj.id === "funnel-glp1-stalled" ? "text-amber-400 border-amber-500/40" : "text-[#f5a794] border-[#8b2644]/40"
+                        }`}>
+                          {proj.id === "funnel-glp1-stalled" ? "Funnel + CRM" : "Sales Funnel"}
+                        </div>
+                      </div>
+                    )}
                     <div className="flex items-center justify-between gap-2 mb-3">
-                      <span className="text-[11px] font-mono px-2 py-0.5 bg-[#8b2644]/20 text-[#f5a794] border border-[#8b2644]/40 rounded font-semibold">
+                      <span className={`text-[11px] font-mono px-2 py-0.5 border rounded font-semibold ${
+                        proj.id === "funnel-glp1-stalled"
+                          ? "bg-amber-500/20 text-amber-400 border-amber-500/40"
+                          : "bg-[#8b2644]/20 text-[#f5a794] border-[#8b2644]/40"
+                      }`}>
                         {proj.brand}
                       </span>
-                      <span className="text-[11px] font-mono text-[#f5a794] flex items-center gap-1">
+                      <span className={`text-[11px] font-mono flex items-center gap-1 ${
+                        proj.id === "funnel-glp1-stalled" ? "text-amber-400" : "text-[#f5a794]"
+                      }`}>
                         <span>{proj.category}</span>
                         <Sparkles className="w-3 h-3" />
                       </span>
                     </div>
                     <div className="flex items-center justify-between gap-2 mb-1.5">
-                      <h3 className="text-base font-bold text-white group-hover:text-[#f5a794] transition-colors">{proj.name}</h3>
+                      <h3 className={`text-base font-bold text-white transition-colors ${
+                        proj.id === "funnel-glp1-stalled" ? "group-hover:text-amber-400" : "group-hover:text-[#f5a794]"
+                      }`}>{proj.name}</h3>
                     </div>
                     <p className="text-muted-foreground text-xs leading-relaxed mb-3">{proj.desc}</p>
-                    <div className="flex items-center justify-between gap-1 text-[11px] font-mono text-[#f5a794]">
+                    <div className={`flex items-center justify-between gap-1 text-[11px] font-mono ${
+                      proj.id === "funnel-glp1-stalled" ? "text-amber-400" : "text-[#f5a794]"
+                    }`}>
                       <div className="flex items-center gap-1">
                         <Globe className="w-3 h-3" />
                         <span>{proj.domain}</span>
@@ -1518,6 +1846,37 @@ export default function Home() {
                     <div className="flex items-center gap-1 text-[11px] font-mono text-primary/80 group-hover:text-primary">
                       <Globe className="w-3 h-3" />
                       <span>{proj.domain}</span>
+                    </div>
+                  </a>
+                ) : proj.behanceUrl ? (
+                  <a
+                    href={proj.behanceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block h-full group bg-card border border-border p-5 transition-all duration-300 hover:border-primary/50 hover:bg-primary/[0.02] cursor-pointer"
+                  >
+                    <div className="flex items-center justify-between gap-2 mb-3">
+                      <span className="text-[11px] font-mono px-2 py-0.5 bg-primary/10 text-primary border border-primary/25 rounded">
+                        {proj.brand}
+                      </span>
+                      <span className="text-[11px] font-mono text-muted-foreground/70 group-hover:text-primary transition-colors flex items-center gap-1">
+                        <span>{proj.category}</span>
+                        <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between gap-2 mb-1.5">
+                      <h3 className="text-base font-bold text-white group-hover:text-primary transition-colors">{proj.name}</h3>
+                    </div>
+                    <p className="text-muted-foreground text-xs leading-relaxed mb-3">{proj.desc}</p>
+                    <div className="flex items-center justify-between gap-1 text-[11px] font-mono text-muted-foreground group-hover:text-primary transition-colors pt-2 border-t border-border/40">
+                      <span className="flex items-center gap-1 text-primary">
+                        <Eye className="w-3.5 h-3.5" />
+                        <span>View Screenshots</span>
+                      </span>
+                      <span className="text-[10px] text-muted-foreground/70 flex items-center gap-1">
+                        <span>Behance</span>
+                        <ArrowUpRight className="w-3 h-3" />
+                      </span>
                     </div>
                   </a>
                 ) : (
@@ -1916,21 +2275,307 @@ export default function Home() {
         </div>
       </section>
 
-      {/* --- BRANDS TRUST STRIP --- */}
-      <section className="relative z-10 py-16 px-6 border-y border-border bg-card/20">
+      {/* --- INDUSTRIES I'VE BUILT AUTOMATION SYSTEMS FOR --- */}
+      <section id="industries" className="relative z-10 py-24 px-6 border-y border-border bg-card/10 overflow-hidden">
         <div className="max-w-7xl mx-auto">
           <FadeIn>
-            <p className="text-center text-xs font-mono uppercase tracking-[0.3em] text-muted-foreground mb-10">
-              Brands & clients I've built for
-            </p>
-            <div className="flex flex-wrap justify-center items-center gap-x-10 gap-y-5">
-              {brands.map((brand, i) => (
-                <span key={i} className="text-sm font-semibold text-muted-foreground/60 hover:text-primary transition-colors duration-300 tracking-wide uppercase">
-                  {brand}
-                </span>
-              ))}
+            <div className="flex flex-col items-center text-center mb-12">
+              <div className="flex items-center gap-2 px-3 py-1 bg-primary/10 border border-primary/30 text-primary text-xs font-mono uppercase tracking-widest rounded-full mb-4">
+                <Briefcase className="w-3.5 h-3.5" />
+                <span>Client & Industry Footprint</span>
+              </div>
+              <h2 className="text-3xl md:text-5xl font-bold tracking-tight uppercase text-glow text-white max-w-4xl">
+                Industries I've Built Automation Systems For
+              </h2>
+              <p className="text-muted-foreground text-sm md:text-base mt-4 max-w-2xl leading-relaxed">
+                Clear, verified client work across diverse business models — from high-ticket property marketing funnels to medical clinic booking architectures and agency white-label execution.
+              </p>
+
+              {/* Variation Switcher */}
+              <div className="mt-8 inline-flex items-center p-1.5 rounded-xl bg-card border border-border/80 shadow-inner">
+                <button
+                  type="button"
+                  onClick={() => setIndustryVariation("grid")}
+                  className={`px-4 py-2 text-xs font-mono rounded-lg transition-all cursor-pointer flex items-center gap-2 ${
+                    industryVariation === "grid"
+                      ? "bg-primary text-primary-foreground font-bold shadow-sm"
+                      : "text-muted-foreground hover:text-white"
+                  }`}
+                >
+                  <Layers className="w-3.5 h-3.5" />
+                  <span>Variation 1: Icon Grid</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIndustryVariation("list")}
+                  className={`px-4 py-2 text-xs font-mono rounded-lg transition-all cursor-pointer flex items-center gap-2 ${
+                    industryVariation === "list"
+                      ? "bg-primary text-primary-foreground font-bold shadow-sm"
+                      : "text-muted-foreground hover:text-white"
+                  }`}
+                >
+                  <Workflow className="w-3.5 h-3.5" />
+                  <span>Variation 2: Clean Directory</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIndustryVariation("matrix")}
+                  className={`px-4 py-2 text-xs font-mono rounded-lg transition-all cursor-pointer flex items-center gap-2 ${
+                    industryVariation === "matrix"
+                      ? "bg-primary text-primary-foreground font-bold shadow-sm"
+                      : "text-muted-foreground hover:text-white"
+                  }`}
+                >
+                  <Building2 className="w-3.5 h-3.5" />
+                  <span>Variation 3: Vertical Matrix</span>
+                </button>
+              </div>
             </div>
           </FadeIn>
+
+          {/* VARIATION 1: ICON GRID */}
+          {industryVariation === "grid" && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {industriesData.map((ind, i) => {
+                const IconComponent = ind.icon;
+                return (
+                  <FadeIn key={ind.id} delay={i * 0.08}>
+                    <div className="h-full flex flex-col bg-card border border-border p-6 rounded-xl hover:border-primary/50 transition-all duration-300 group hover:bg-card/80">
+                      <div className="flex items-start justify-between gap-3 mb-4">
+                        <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/25 flex items-center justify-center text-primary group-hover:scale-105 group-hover:bg-primary/20 transition-all">
+                          <IconComponent className="w-6 h-6" />
+                        </div>
+                        <span className="text-[11px] font-mono px-2.5 py-1 rounded bg-primary/10 text-primary border border-primary/20">
+                          {ind.badge}
+                        </span>
+                      </div>
+
+                      <h3 className="text-xl font-bold text-white mb-2 group-hover:text-primary transition-colors">
+                        {ind.name}
+                      </h3>
+
+                      <p className="text-sm text-foreground/90 font-medium leading-snug mb-3">
+                        {ind.headline}
+                      </p>
+
+                      <div className="p-3 rounded-lg bg-background/60 border border-border/60 mb-4 text-xs text-muted-foreground leading-relaxed">
+                        <span className="text-white/90 font-medium block mb-1">Relationship Context:</span>
+                        {ind.clientContext}
+                      </div>
+
+                      <div className="mt-auto pt-4 border-t border-border/50">
+                        <p className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground/80 mb-2 font-semibold">
+                          Systems & Workflows Built:
+                        </p>
+                        <ul className="space-y-1.5 mb-4">
+                          {ind.systemsBuilt.map((sys, idx) => (
+                            <li key={idx} className="text-xs text-muted-foreground flex items-start gap-2 leading-tight">
+                              <Check className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
+                              <span>{sys}</span>
+                            </li>
+                          ))}
+                        </ul>
+
+                        {ind.developersOrTools && ind.developersOrTools.length > 0 && (
+                          <div className="pt-3 border-t border-border/40 flex flex-wrap items-center gap-1.5">
+                            <span className="text-[10px] font-mono text-muted-foreground/70 mr-1">
+                              {ind.id === "real-estate" ? "Developers:" : "Stack:"}
+                            </span>
+                            {ind.developersOrTools.map((tag, tIdx) => (
+                              <span key={tIdx} className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-card border border-border text-foreground/80">
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </FadeIn>
+                );
+              })}
+            </div>
+          )}
+
+          {/* VARIATION 2: CLEAN SCANNABLE DIRECTORY */}
+          {industryVariation === "list" && (
+            <div className="max-w-5xl mx-auto space-y-4">
+              {industriesData.map((ind, i) => {
+                const IconComponent = ind.icon;
+                return (
+                  <FadeIn key={ind.id} delay={i * 0.06}>
+                    <div className="p-6 bg-card border border-border rounded-xl hover:border-primary/50 transition-all">
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-border/50">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/25 flex items-center justify-center text-primary shrink-0">
+                            <IconComponent className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h3 className="text-lg font-bold text-white">{ind.name}</h3>
+                              <span className="text-[10px] font-mono px-2 py-0.5 bg-primary/10 text-primary border border-primary/20 rounded">
+                                {ind.badge}
+                              </span>
+                            </div>
+                            <p className="text-xs text-primary/90 font-mono mt-0.5">{ind.deliverableTag}</p>
+                          </div>
+                        </div>
+                        <div className="text-xs text-muted-foreground/80 font-mono max-w-md">
+                          {ind.clientContext}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
+                        <div>
+                          <p className="text-[11px] font-mono uppercase text-muted-foreground font-semibold mb-2">Automations Delivered</p>
+                          <ul className="space-y-1 text-xs text-muted-foreground">
+                            {ind.systemsBuilt.slice(0, 3).map((item, idx) => (
+                              <li key={idx} className="flex items-start gap-2">
+                                <span className="text-primary font-bold">•</span>
+                                <span>{item}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                        <div>
+                          <p className="text-[11px] font-mono uppercase text-muted-foreground font-semibold mb-2">Verified Outcomes</p>
+                          <ul className="space-y-1 text-xs text-muted-foreground">
+                            {ind.proofPoints.map((item, idx) => (
+                              <li key={idx} className="flex items-start gap-2">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
+                                <span>{item}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </FadeIn>
+                );
+              })}
+            </div>
+          )}
+
+          {/* VARIATION 3: VERTICAL MATRIX (Direct Clients vs Agency Partnerships) */}
+          {industryVariation === "matrix" && (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+              {/* Column 1: Direct Client Verticals */}
+              <div className="lg:col-span-7 space-y-6">
+                <div className="flex items-center gap-2 pb-3 border-b border-border">
+                  <Target className="w-5 h-5 text-primary" />
+                  <h3 className="text-lg font-bold text-white uppercase tracking-wider">
+                    Direct Client Verticals
+                  </h3>
+                  <span className="text-xs font-mono text-muted-foreground ml-auto">4 Specialized Sectors</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {industriesData.filter(d => d.id !== "agency-partnerships").map((ind) => {
+                    const IconComponent = ind.icon;
+                    return (
+                      <div key={ind.id} className="p-4 rounded-xl bg-card border border-border flex flex-col justify-between">
+                        <div>
+                          <div className="flex items-center gap-2.5 mb-2.5">
+                            <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
+                              <IconComponent className="w-4 h-4" />
+                            </div>
+                            <div>
+                              <h4 className="text-sm font-bold text-white">{ind.name}</h4>
+                              <p className="text-[10px] font-mono text-muted-foreground">{ind.badge}</p>
+                            </div>
+                          </div>
+                          <p className="text-xs text-muted-foreground leading-relaxed mb-3">
+                            {ind.clientContext}
+                          </p>
+                        </div>
+                        <div className="pt-2 border-t border-border/40 text-[11px] font-mono text-primary flex items-center justify-between">
+                          <span>{ind.deliverableTag}</span>
+                          <Check className="w-3.5 h-3.5" />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Column 2: Agency White-Label Partnerships */}
+              <div className="lg:col-span-5 flex flex-col">
+                <div className="flex items-center gap-2 pb-3 border-b border-border mb-6">
+                  <Briefcase className="w-5 h-5 text-primary" />
+                  <h3 className="text-lg font-bold text-white uppercase tracking-wider">
+                    Agency Partnerships
+                  </h3>
+                  <span className="text-xs font-mono text-muted-foreground ml-auto">Contractor / White-Label</span>
+                </div>
+
+                <div className="flex-grow p-6 rounded-xl bg-card border border-primary/30 flex flex-col justify-between relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-2xl pointer-events-none" />
+                  
+                  <div>
+                    <span className="text-xs font-mono px-2.5 py-1 bg-primary/20 text-primary border border-primary/40 rounded inline-block mb-3 font-semibold">
+                      Reliable Technical Delivery
+                    </span>
+                    <h4 className="text-xl font-bold text-white mb-2">
+                      Embedded CRM & Funnel Specialist
+                    </h4>
+                    <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                      Partnered with and contracted through digital automation agencies to fulfill end-to-end client CRM setups and complex snapshot builds without management overhead.
+                    </p>
+
+                    <div className="space-y-2 mb-6">
+                      <p className="text-xs font-mono uppercase tracking-wider text-white font-semibold">What I handle for agencies:</p>
+                      <div className="text-xs text-muted-foreground space-y-1.5">
+                        <div className="flex items-center gap-2">
+                          <Check className="w-3.5 h-3.5 text-primary shrink-0" />
+                          <span>Complete GHL sub-account setups & pipeline hygiene</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Check className="w-3.5 h-3.5 text-primary shrink-0" />
+                          <span>Turnkey snapshot builds & custom webhook integrations</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Check className="w-3.5 h-3.5 text-primary shrink-0" />
+                          <span>ManyChat Instagram & Facebook DM automated qualification</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Check className="w-3.5 h-3.5 text-primary shrink-0" />
+                          <span>Fast, predictable contractor turnaround on client overflow</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-border flex items-center justify-between text-xs font-mono">
+                    <span className="text-muted-foreground">Availability:</span>
+                    <span className="text-primary font-bold">Open for Agency Contracts</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Authentic Real Estate Developer & Partner Foundation Banner */}
+          <div className="mt-12 pt-8 border-t border-border/60">
+            <FadeIn>
+              <div className="p-4 rounded-xl bg-background/50 border border-border/80 flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
+                <div>
+                  <p className="text-xs font-mono text-muted-foreground uppercase tracking-wider">
+                    Real Estate Marketing Funnels & Asset Delivery
+                  </p>
+                  <p className="text-xs text-foreground/80 mt-0.5">
+                    Developed high-converting campaign funnels for agencies promoting properties from Dubai & UAE developers:
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center justify-center md:justify-end gap-2 text-xs font-mono text-primary font-medium">
+                  <span className="px-2 py-1 bg-card border border-border rounded">Emaar</span>
+                  <span className="px-2 py-1 bg-card border border-border rounded">Meraas</span>
+                  <span className="px-2 py-1 bg-card border border-border rounded">Aldar</span>
+                  <span className="px-2 py-1 bg-card border border-border rounded">Sobha</span>
+                  <span className="px-2 py-1 bg-card border border-border rounded">Nikki Beach</span>
+                  <span className="px-2 py-1 bg-card border border-border rounded">Binghatti</span>
+                </div>
+              </div>
+            </FadeIn>
+          </div>
         </div>
       </section>
 
@@ -1965,6 +2610,8 @@ export default function Home() {
             <div className="flex flex-wrap justify-center items-center gap-6 text-sm font-mono uppercase tracking-widest text-muted-foreground">
               <a href="https://linkedin.com/in/mehma-qudsia" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">LinkedIn</a>
               <span>•</span>
+              <a href="https://www.behance.net/mehmaqudsia" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Behance</a>
+              <span>•</span>
               <a href="https://www.upwork.com/freelancers/mehmaqudsia" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Upwork Profile</a>
               <span>•</span>
               <a href="https://wa.me/923135279257" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">WhatsApp</a>
@@ -1978,6 +2625,9 @@ export default function Home() {
 
       {/* --- SKIN EDIT SALES FUNNEL FULLSCREEN MODAL --- */}
       <SkinEditModal isOpen={skinEditModalOpen} onClose={() => setSkinEditModalOpen(false)} />
+
+      {/* --- GLP-1 STALLED FUNNEL & AUTOMATION MODAL --- */}
+      <GLP1StalledModal isOpen={glp1ModalOpen} onClose={() => setGlp1ModalOpen(false)} />
     </div>
   );
 }
